@@ -210,4 +210,17 @@ export const getProductByCategory = asyncHandler(async (req: Request, res: Respo
     res.status(200).json(new ApiResponse("Products retrieved successfully", products));
 });
 
-
+// GET /api/products/:id/stock-info
+// Returns FIFO-front batch MRP + total available qty
+export const getProductStockInfo = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+        throw new ApiError(400, "Product ID is required");
+    }
+    const batches = await PrismaClient.purchaseBatch.aggregate({
+        where: { productId: id, qtyRemaining: { gt: 0 } },
+        _sum: { qtyRemaining: true },
+    });
+    const stockBase = batches._sum.qtyRemaining ?? 0;
+    return res.json(new ApiResponse("OK", { stockBase }));
+});

@@ -37,7 +37,8 @@ import customerRouter from "./routers/coustomer.router.js"
 import supplierRouter from "./routers/supplier.router.js"
 import categoriesRouter from "./routers/categories.router.js"
 import productRouter from "./routers/product.router.js"
-// import requestRouter from "./routers/request.router"
+import purchaseRouter from "./routers/purchase.router.js"
+import salesMaster from "./routers/sales.router.js"
 
 
 // Roueters
@@ -45,8 +46,8 @@ app.use("/api/v1/customer", customerRouter)
 app.use("/api/v1/supplier", supplierRouter)
 app.use("/api/v1/categories", categoriesRouter)
 app.use("/api/v1/products", productRouter)
-// app.use("/sendHere", requestProccessorRouter)
-// app.use("/api/v1/requestLog", requestLogRouter)
+app.use("/api/v1/purchases", purchaseRouter)
+app.use("/api/v1/sales", salesMaster)
 // app.use("/api/v1/rateLimiting", rateLimitingRouter)
 
 

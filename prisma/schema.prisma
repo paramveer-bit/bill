@@ -92,7 +92,7 @@ model Category {
 }
 
 model ProductPriceHistory {
-  id            Int      @id @default(autoincrement())
+  id            String   @id @default(uuid())
   product       Product  @relation(fields: [productId], references: [id])
   productId     String
   price         Decimal  @db.Decimal(12, 2) // selling price
@@ -118,7 +118,7 @@ model Customer {
 }
 
 model Purchase {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   supplier     Supplier @relation(fields: [supplierId], references: [id])
   supplierId   String
   invoiceNo    String?
@@ -134,7 +134,7 @@ model PurchaseBatch {
   product         Product               @relation(fields: [productId], references: [id])
   productId       String
   purchase        Purchase?             @relation(fields: [purchaseId], references: [id])
-  purchaseId      Int?
+  purchaseId      String?
   qtyReceived     Int
   qtyRemaining    Int
   unitCost        Decimal               @db.Decimal(12, 2)
@@ -145,24 +145,39 @@ model PurchaseBatch {
 }
 
 model Sale {
-  id          Int       @id @default(autoincrement())
-  invoiceNo   String    @unique
-  customer    Customer? @relation(fields: [customerId], references: [id])
-  customerId  String?
-  saleDate    DateTime
-  totalAmount Decimal   @db.Decimal(12, 2)
-  createdAt   DateTime  @default(now())
+  id         String    @id @default(uuid())
+  invoiceNo  String    @unique
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+
+  // ------------------ Customer details on sale for historical accuracy, even if they change later
+  customerName    String? // snapshot of customer name at time of sale
+  customerGST     String? // snapshot of customer GST number at time of sale
+  customerPhone   String? // snapshot of customer phone number at time of sale
+  customerAddress String? // snapshot of customer address at time of sale
+  // ------------------
+  saleDate        DateTime
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  createdAt       DateTime @default(now())
 
   lines SaleLine[]
 }
 
 model SaleLine {
-  id            Int      @id @default(autoincrement())
-  sale          Sale     @relation(fields: [saleId], references: [id])
-  saleId        Int
-  product       Product  @relation(fields: [productId], references: [id])
-  productId     String
-  qty           Int
+  id        Int     @id @default(autoincrement())
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  saleId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  // We store the unit details on the line for historical accuracy, even if they change later
+  qty      Int // Base unit quantity (in Pcs)
+  unitQty  Int // the quantity in the unit sold (e.g., 1 Case = 12 Pcs, so unitQty=1, qty=12)
+  unitname String // "Case", "Ladi", "Pcs" - for reference, not used in calculations  
+
+  //----------product details
+  productName   String // snapshot of product name at time of sale
+  // We store the price details on the line for historical accuracy, even if they change later 
   unitSellPrice Decimal  @db.Decimal(12, 2) // the final price charged to customer
   taxRate       Decimal? @db.Decimal(5, 2)
   lineTotal     Decimal  @db.Decimal(12, 2)
