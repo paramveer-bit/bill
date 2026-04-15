@@ -3,7 +3,8 @@ import {
     createCustomer,
     getCustomers,
     getCustomerById,
-    updateCustomer
+    updateCustomer,
+    getCustomerLedger
 } from "../controllers/coustomer.controller.js";
 
 
@@ -25,7 +26,10 @@ router.put(
     "/:id",
     updateCustomer
 );
-
+router.get(
+    "/:id/ledger",
+    getCustomerLedger
+);
 
 
 export default router;

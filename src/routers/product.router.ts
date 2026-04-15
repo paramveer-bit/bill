@@ -5,13 +5,16 @@ import {
     getProductById,
     updateProduct,
     getProductByCategory,
-    getProductStockInfo
+    getProductStockInfo,
+    getProductsByCategoryHierarchy
 } from "../controllers/product.controller.js";
 
 const router = Router();
 
 router.get("/", getProducts);          // GET  /products?search=&categoryId=
 router.post("/", createProduct);        // POST /products
+router.get("/grouped/category", getProductsByCategoryHierarchy);
+
 router.get("/category/:categoryId", getProductByCategory); // GET  /products/category/:categoryId
 router.get("/:id", getProductById);       // GET  /products/:id
 router.put("/:id", updateProduct);        // PUT  /products/:id

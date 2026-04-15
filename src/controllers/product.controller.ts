@@ -74,7 +74,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const getProducts = asyncHandler(async (req: Request, res: Response) => {
-    const { categoryId, search } = req.query;
+    const { categoryId, search, lowStockThreshold } = req.query;
 
     const products = await PrismaClient.product.findMany({
         where: {
@@ -90,12 +90,45 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
                 }
                 : {}),
         },
-        include: productInclude,
+        include: {
+            ...productInclude,
+            // 2. CRITICAL: Include purchaseBatches to calculate stock
+            purchaseBatches: {
+                where: { qtyRemaining: { gt: 0 } },
+                select: { qtyRemaining: true }
+            }
+        },
         orderBy: { name: "asc" },
     });
 
-    res.status(200).json(new ApiResponse("Products retrieved successfully", products));
+    // 3. Transform data to calculate totalStockPcs on the server
+    // This offloads the 'reduce' logic from the browser to the server
+    let productsWithStock = products.map(product => {
+        const totalStockPcs = product.purchaseBatches.reduce(
+            (sum, b) => sum + b.qtyRemaining,
+            0
+        );
+        return {
+            ...product,
+            totalStockPcs
+        };
+    });
+
+    // 4. Backend-side Low Stock filtering
+    // If the user passes ?lowStockThreshold=20, we filter the list here
+    if (lowStockThreshold !== undefined) {
+        const threshold = Number(lowStockThreshold);
+        productsWithStock = productsWithStock.filter(
+            p => p.totalStockPcs <= threshold
+        );
+    }
+
+    res.status(200).json(
+        new ApiResponse("Products retrieved successfully", productsWithStock)
+    );
 });
+
+
 
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {
     const productId = req.params.id;
@@ -223,4 +256,34 @@ export const getProductStockInfo = asyncHandler(async (req: Request, res: Respon
     });
     const stockBase = batches._sum.qtyRemaining ?? 0;
     return res.json(new ApiResponse("OK", { stockBase }));
+});
+
+export const getProductsByCategoryHierarchy = asyncHandler(async (req: Request, res: Response) => {
+    // Fetch all categories with their products
+    const categories = await PrismaClient.category.findMany({
+        where: { parentId: null }, // Get root categories only
+        include: {
+            products: {
+                include: productInclude,
+                orderBy: { name: "asc" },
+            },
+            children: {
+                include: {
+                    products: {
+                        include: productInclude,
+                        orderBy: { name: "asc" },
+                    },
+                },
+            },
+        },
+        orderBy: { name: "asc" },
+    });
+
+    // Transform to include total product count
+    const groupedData = categories.map(cat => ({
+        ...cat,
+        productCount: cat.products.length + cat.children.reduce((sum, child) => sum + child.products.length, 0),
+    }));
+
+    res.status(200).json(new ApiResponse("Products grouped by category", groupedData));
 });

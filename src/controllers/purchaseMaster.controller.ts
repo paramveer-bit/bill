@@ -155,8 +155,8 @@ function getDateRange(filter: string): { gte?: Date; lte?: Date } | undefined {
 export const getPurchases = asyncHandler(async (req: Request, res: Response) => {
     const {
         supplierId,
-        from,
-        to,
+        startDate,    // CHANGED: Match frontend hook key
+        endDate,      // CHANGED: Match frontend hook key
         invoiceNo,
         search,
         dateFilter,
@@ -170,25 +170,23 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
 
     // ── Build where clause ───────────────────────────────────────────────────
 
-    // Date range: prefer explicit from/to, fall back to dateFilter preset
     let dateRange: { gte?: Date; lte?: Date } | undefined;
-    if (from || to) {
+
+    // Standardized ISO handling
+    if (startDate || endDate) {
         dateRange = {
-            ...(from ? { gte: new Date(from) } : {}),
-            ...(to ? { lte: new Date(new Date(to).setHours(23, 59, 59, 999)) } : {}),
+            ...(startDate ? { gte: new Date(startDate) } : {}),
+            // Ensure the end date covers the full day until the last millisecond
+            ...(endDate ? { lte: new Date(new Date(endDate).setHours(23, 59, 59, 999)) } : {}),
         };
     } else if (dateFilter && dateFilter !== "all") {
+        // Fallback for cases where only a preset string is sent
         dateRange = getDateRange(dateFilter);
     }
 
-    const where = {
+    const where: any = {
         ...(supplierId ? { supplierId } : {}),
         ...(dateRange ? { purchaseDate: dateRange } : {}),
-        // invoiceNo param kept for direct exact/partial search (used by other callers)
-        ...(invoiceNo && !search
-            ? { invoiceNo: { contains: invoiceNo, mode: "insensitive" as const } }
-            : {}),
-        // search: matches invoiceNo OR supplier name
         ...(search
             ? {
                 OR: [
@@ -197,11 +195,15 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
                 ],
             }
             : {}),
+        // If specific invoiceNo is provided without general search
+        ...(invoiceNo && !search
+            ? { invoiceNo: { contains: invoiceNo, mode: "insensitive" as const } }
+            : {}),
     };
 
-    // ── Count + paginated data in parallel ───────────────────────────────────
+    // ── Data Fetching ───────────────────────────────────
 
-    const [total, purchases] = await Promise.all([
+    const [total, purchases, agg] = await Promise.all([
         PrismaClient.purchase.count({ where }),
         PrismaClient.purchase.findMany({
             where,
@@ -218,21 +220,22 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
             skip,
             take: limit,
         }),
+        // Fetch total spend across all matching records (not just current page)
+        PrismaClient.purchase.aggregate({
+            where,
+            _sum: { totalAmount: true },
+        }),
     ]);
 
-    // ── Aggregate totals for summary strip (across entire filtered set) ───────
-    const agg = await PrismaClient.purchase.aggregate({
-        where,
-        _sum: { totalAmount: true },
-    });
-
-    // ── Batch line-item count (across current page) ───────────────────────────
     const result = purchases.map((p) => ({
         ...p,
         batchCount: p.batches.length,
         batches: undefined,
     }));
 
+    // totalLineItems usually refers to the total batches across ALL matching purchases
+    // If you want it for the current page only, keep your existing logic. 
+    // If you want it for the whole period, you'd need another aggregate.
     const pageItemCount = result.reduce((s, p) => s + p.batchCount, 0);
 
     res.status(200).json(
@@ -241,10 +244,10 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
             meta: {
                 page,
                 limit,
-                total,                // total matching records
+                total,
                 totalPages: Math.ceil(total / limit),
-                totalSpend: Number(agg._sum.totalAmount ?? 0),  // across full filtered set
-                totalLineItems: pageItemCount,                   // across current page
+                totalSpend: Number(agg._sum.totalAmount ?? 0),
+                totalLineItems: pageItemCount,
             },
         }),
     );
