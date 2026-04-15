@@ -203,7 +203,7 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
 
     // ── Data Fetching ───────────────────────────────────
 
-    const [total, purchases, agg] = await Promise.all([
+    const [total, purchases, agg, totalLineItemsCount] = await Promise.all([
         PrismaClient.purchase.count({ where }),
         PrismaClient.purchase.findMany({
             where,
@@ -214,7 +214,7 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
                 totalAmount: true,
                 createdAt: true,
                 supplier: { select: { id: true, name: true } },
-                batches: { select: { id: true } },
+                batches: { select: { id: true, productId: true } },
             },
             orderBy: { purchaseDate: "desc" },
             skip,
@@ -225,18 +225,21 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
             where,
             _sum: { totalAmount: true },
         }),
+        PrismaClient.purchaseBatch.groupBy({
+            by: ['productId'],
+            where: { purchase: where }
+        })
     ]);
 
-    const result = purchases.map((p) => ({
-        ...p,
-        batchCount: p.batches.length,
-        batches: undefined,
-    }));
+    const result = purchases.map((p) => {
+        const uniqueProductIds = new Set(p.batches.map(batch => batch.productId));
+        return {
+            ...p,
+            batchCount: uniqueProductIds.size,
+            batches: undefined,
+        };
+    });
 
-    // totalLineItems usually refers to the total batches across ALL matching purchases
-    // If you want it for the current page only, keep your existing logic. 
-    // If you want it for the whole period, you'd need another aggregate.
-    const pageItemCount = result.reduce((s, p) => s + p.batchCount, 0);
 
     res.status(200).json(
         new ApiResponse("Purchases fetched successfully", {
@@ -247,7 +250,7 @@ export const getPurchases = asyncHandler(async (req: Request, res: Response) => 
                 total,
                 totalPages: Math.ceil(total / limit),
                 totalSpend: Number(agg._sum.totalAmount ?? 0),
-                totalLineItems: pageItemCount,
+                totalLineItems: totalLineItemsCount.length,
             },
         }),
     );

@@ -314,7 +314,7 @@ export const getSales = asyncHandler(async (req: Request, res: Response) => {
     const orderBy = allowedSortFields[sortBy] ?? { saleDate: "desc" };
 
     // 5. Parallel count + fetch
-    const [total, sales] = await Promise.all([
+    const [total, sales, agg, totalLineItemsCount] = await Promise.all([
         PrismaClient.sale.count({ where }),
         PrismaClient.sale.findMany({
             where,
@@ -334,7 +334,17 @@ export const getSales = asyncHandler(async (req: Request, res: Response) => {
                 },
                 _count: { select: { lines: true } },
             },
+
         }),
+        PrismaClient.sale.aggregate({
+            where,
+            _sum: { totalAmount: true },
+        }),
+        PrismaClient.saleLine.count({
+            where: {
+                sale: where // This applies your dateRange and search filters to the lines
+            }
+        })
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -346,7 +356,9 @@ export const getSales = asyncHandler(async (req: Request, res: Response) => {
                 page,
                 limit,
                 total,
-                totalPages
+                totalPages,
+                totalSpend: Number(agg._sum.totalAmount ?? 0),
+                totalLineItems: totalLineItemsCount
             },
         })
     );
