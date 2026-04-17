@@ -462,7 +462,34 @@ const updateSupplierPayment = asyncHandler(async (req: Request, res: Response) =
     );
 });
 
-
+const deleteSupplierPayment = asyncHandler(async (req: Request, res: Response) => {
+    const { id, paymentId } = req.params;
+    if (!paymentId || !id) {
+        throw new ApiError(400, "Payment ID and Supplier ID's are required");
+    }
+    const payment = await PrismaClient.supplierPayment.findUnique({
+        where: { id: paymentId, supplierId: id },
+    });
+    if (!payment) {
+        throw new ApiError(404, "Supplier payment not found");
+    }
+    await PrismaClient.$transaction(async (tx) => {
+        // First, delete the payment
+        await tx.supplierPayment.delete({
+            where: { id: paymentId },
+        });
+        // Then, adjust the supplier balance by adding back the payment amount
+        await tx.supplier.update({
+            where: { id: payment.supplierId },
+            data: {
+                balance: {
+                    increment: new Decimal(payment.amount),
+                }
+            }
+        });
+    });
+    res.status(200).json(new ApiResponse("Supplier payment deleted successfully", null));
+});
 const getSupplierLedger = asyncHandler(async (req: Request, res: Response) => {
     const { id: supplierId } = req.params;
     let { startDate, endDate, page: pageStr, limit: limitStr } = req.query;
@@ -547,11 +574,12 @@ const getSupplierLedger = asyncHandler(async (req: Request, res: Response) => {
         })),
         ...payments.map((p) => ({
             date: p.paymentDate,
-            type: "PAYMENT",
+            type: p.paymentMode == "Credit Note" ? p.paymentMode : "PAYMENT",
             desc: `Payment ${p.paymentMode}${p.checkNo ? ` - Chq #${p.checkNo}` : p.reference ? ` - ${p.reference}` : ""}`,
             debit: 0,
             credit: Number(p.amount) || 0, // Payment = we owe less (Credit)
             id: `payment-${p.id}`,
+            remarks: p.remarks
         })),
     ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
@@ -696,6 +724,8 @@ const getSupplierBalanceSummary = asyncHandler(async (req: Request, res: Respons
 });
 
 
+
+
 export {
     getSupplierLedger,
     getSupplierBalanceSummary,
@@ -706,5 +736,6 @@ export {
     addSupplierPayment,
     getSupplierPayments,
     getSupplierPaymentsById,
-    updateSupplierPayment
+    updateSupplierPayment,
+    deleteSupplierPayment
 }

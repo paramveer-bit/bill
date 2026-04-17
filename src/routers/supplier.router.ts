@@ -10,7 +10,8 @@ import {
     getSupplierPaymentsById,
     updateSupplierPayment,
     getSupplierLedger,
-    getSupplierBalanceSummary
+    getSupplierBalanceSummary,
+    deleteSupplierPayment
 } from "../controllers/supplier.controller.js"
 
 const router = Router();
@@ -27,6 +28,7 @@ router.post("/:id/payments", addSupplierPayment)
 router.get("/:id/payments", getSupplierPaymentsById)
 router.get("/payments/getAll", getSupplierPayments)
 router.put("/:id/payments/:paymentId", updateSupplierPayment)
+router.delete("/:id/payments/:paymentId", deleteSupplierPayment)
 
 
 router.get("/:id/ledger", getSupplierLedger);

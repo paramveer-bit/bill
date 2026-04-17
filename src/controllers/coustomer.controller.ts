@@ -133,7 +133,7 @@ export const getCustomerLedger = asyncHandler(async (req: Request, res: Response
     // 5. Merge and Calculate Running Balance
     const ledgerEntries = [
         ...sales.map(s => ({ date: s.saleDate, type: "SALE", desc: `Inv #${s.invoiceNo}`, debit: Number(s.totalAmount), credit: 0 })),
-        ...receipts.map(r => ({ date: r.receiptDate, type: "RECEIPT", desc: r.paymentMode, debit: 0, credit: Number(r.amount) }))
+        ...receipts.map(r => ({ remarks: r.remarks, date: r.receiptDate, type: (r.paymentMode == "Discount" ? r.paymentMode : "RECEIPT"), desc: r.paymentMode, debit: 0, credit: Number(r.amount) }))
     ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
     let runningBal = balanceBF;

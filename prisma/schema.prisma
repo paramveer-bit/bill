@@ -136,7 +136,7 @@ model Purchase {
 }
 
 model PurchaseBatch {
-  id              Int                   @id @default(autoincrement())
+  id              String                @id @default(uuid())
   product         Product               @relation(fields: [productId], references: [id])
   productId       String
   purchase        Purchase?             @relation(fields: [purchaseId], references: [id])
@@ -170,7 +170,7 @@ model Sale {
 }
 
 model SaleLine {
-  id        Int     @id @default(autoincrement())
+  id        String  @id @default(uuid())
   sale      Sale    @relation(fields: [saleId], references: [id])
   saleId    String
   product   Product @relation(fields: [productId], references: [id])
@@ -194,22 +194,22 @@ model SaleLine {
 }
 
 model SaleBatchAllocation {
-  id              Int           @id @default(autoincrement())
+  id              String        @id @default(uuid())
   saleLine        SaleLine      @relation(fields: [saleLineId], references: [id])
-  saleLineId      Int
+  saleLineId      String
   purchaseBatch   PurchaseBatch @relation(fields: [purchaseBatchId], references: [id])
-  purchaseBatchId Int
+  purchaseBatchId String
   qtyAllocated    Int
   unitCost        Decimal       @db.Decimal(12, 2) // snapshot of the batch unit cost used
 }
 
 model Receipt {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   customer    Customer @relation(fields: [customerId], references: [id])
   customerId  String
   amount      Decimal  @db.Decimal(12, 2)
   paymentMode String
   receiptDate DateTime
-  reference   String?
+  remarks     String?
   createdAt   DateTime @default(now())
 }

@@ -10,7 +10,7 @@ const receiptSchema = z.object({
     amount: z.number().positive("amount must be positive"),
     paymentMode: z.string().min(1, "paymentMode is required"),
     receiptDate: z.string().optional(),
-    reference: z.string().optional().nullable(),
+    remarks: z.string().optional().nullable(),
 });
 
 /**
@@ -24,12 +24,10 @@ export const createReceipt = asyncHandler(async (req: Request, res: Response) =>
     if (!parsedData.success) {
         throw new ApiError(400, "Validation Error", parsedData.error.issues);
     }
-
     // Check if customer exists
     const customer = await PrismaClient.customer.findUnique({
         where: { id: parsedData.data.customerId },
     });
-
     if (!customer) {
         throw new ApiError(404, "Customer not found");
     }
@@ -45,7 +43,7 @@ export const createReceipt = asyncHandler(async (req: Request, res: Response) =>
                 receiptDate: parsedData.data.receiptDate
                     ? new Date(parsedData.data.receiptDate)
                     : new Date(),
-                reference: parsedData.data.reference || null,
+                remarks: parsedData.data.remarks || null,
             },
         });
 
@@ -69,7 +67,7 @@ export const createReceipt = asyncHandler(async (req: Request, res: Response) =>
             amount: receipt.amount,
             paymentMode: receipt.paymentMode,
             receiptDate: receipt.receiptDate.toISOString(),
-            reference: receipt.reference,
+            remarks: receipt.remarks,
             createdAt: receipt.createdAt.toISOString(),
         })
     );
@@ -143,7 +141,7 @@ export const getReceipts = asyncHandler(async (req: Request, res: Response) => {
     if (search) {
         where.OR = [
             { customer: { name: { contains: search as string, mode: "insensitive" } } },
-            { reference: { contains: search as string, mode: "insensitive" } },
+            { remarks: { contains: search as string, mode: "insensitive" } },
             { paymentMode: { contains: search as string, mode: "insensitive" } },
         ];
     }
@@ -209,7 +207,7 @@ export const getReceipts = asyncHandler(async (req: Request, res: Response) => {
                 amount: Number(receipt.amount),
                 paymentMode: receipt.paymentMode,
                 receiptDate: receipt.receiptDate.toISOString(),
-                reference: receipt.reference,
+                remarks: receipt.remarks,
                 createdAt: receipt.createdAt.toISOString(),
                 customer: receipt.customer,
             })),
@@ -238,7 +236,7 @@ export const getReceiptById = asyncHandler(
         }
 
         const receipt = await PrismaClient.receipt.findUnique({
-            where: { id: parseInt(id) },
+            where: { id: id },
             include: {
                 customer: true,
             },
@@ -255,7 +253,7 @@ export const getReceiptById = asyncHandler(
                 amount: receipt.amount,
                 paymentMode: receipt.paymentMode,
                 receiptDate: receipt.receiptDate.toISOString(),
-                reference: receipt.reference,
+                remarks: receipt.remarks,
                 createdAt: receipt.createdAt.toISOString(),
                 customer: receipt.customer,
             })
@@ -275,11 +273,10 @@ export const deleteReceipt = asyncHandler(
             throw new ApiError(400, "Receipt ID is required");
         }
 
-        const receiptId = parseInt(id);
 
         // Find receipt first
         const receipt = await PrismaClient.receipt.findUnique({
-            where: { id: receiptId },
+            where: { id },
         });
 
         if (!receipt) {
@@ -290,7 +287,7 @@ export const deleteReceipt = asyncHandler(
         await PrismaClient.$transaction(async (tx) => {
             // Delete receipt
             await tx.receipt.delete({
-                where: { id: receiptId },
+                where: { id },
             });
 
             // Restore customer balance (they owe more again)
@@ -351,7 +348,7 @@ export const getCustomerReceipts = asyncHandler(
                     amount: receipt.amount,
                     paymentMode: receipt.paymentMode,
                     receiptDate: receipt.receiptDate.toISOString(),
-                    reference: receipt.reference,
+                    remarks: receipt.remarks,
                     createdAt: receipt.createdAt.toISOString(),
                 })),
                 totalReceived,

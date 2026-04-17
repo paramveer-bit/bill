@@ -77,7 +77,7 @@ export const createSale = asyncHandler(async (req: Request, res: Response) => {
     // ── 3. FIFO allocation planning ─────────────────────────────────────────────
 
     type AllocationPlan = {
-        purchaseBatchId: number;
+        purchaseBatchId: string;
         qtyAllocated: number;
         unitCost: number;
     };
@@ -340,10 +340,9 @@ export const getSales = asyncHandler(async (req: Request, res: Response) => {
             where,
             _sum: { totalAmount: true },
         }),
-        PrismaClient.saleLine.count({
-            where: {
-                sale: where // This applies your dateRange and search filters to the lines
-            }
+        PrismaClient.saleLine.groupBy({
+            by: ['productId'],
+            where: { sale: where }
         })
     ]);
 
@@ -358,7 +357,7 @@ export const getSales = asyncHandler(async (req: Request, res: Response) => {
                 total,
                 totalPages,
                 totalSpend: Number(agg._sum.totalAmount ?? 0),
-                totalLineItems: totalLineItemsCount
+                totalLineItems: totalLineItemsCount.length
             },
         })
     );
@@ -464,6 +463,18 @@ export const deleteSale = asyncHandler(async (req: Request, res: Response) => {
                 data: { balance: { decrement: sale.totalAmount } },
             });
         }
+
+        // 4. DELETE children first to avoid Foreign Key errors
+        // Delete all Allocations related to these SaleLines
+        await tx.saleBatchAllocation.deleteMany({
+            where: { saleLineId: { in: sale.lines.map(l => l.id) } }
+        });
+
+        // Delete all SaleLines related to this Sale
+        await tx.saleLine.deleteMany({
+            where: { saleId: id }
+        });
+
 
         await tx.sale.delete({ where: { id } });
     });

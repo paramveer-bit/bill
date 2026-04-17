@@ -11,9 +11,11 @@ Purchasr front back
 Receipt front back
 Sales front Back
 
-Delete Functionality
-Print Bill Logic
+discount section in sale and purchase
 Purchase View
-Duplicate items in purchase and sales bill
-Suplier payment and reciept dialog box for viewing
 Upload purhcase Bill Photo
+
+reciet
+purchasebatch
+SaleBatchAllocation
+SaleLine

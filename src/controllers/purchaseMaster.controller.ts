@@ -49,7 +49,11 @@ export const createPurchase = asyncHandler(async (req: Request, res: Response) =
         );
         throw new ApiError(404, `Products not found: ${missing.join(", ")}`);
     }
-
+    //check total amount
+    const calculatedTotal = batches.reduce((sum, b) => sum + b.qtyReceived * b.unitCost, 0);
+    if (calculatedTotal !== totalAmount) {
+        throw new ApiError(400, `Total amount mismatch: expected ${calculatedTotal}, got ${totalAmount}`);
+    }
     // ── Transaction ──────────────────────────────────────────────────────────────
 
     const result = await PrismaClient.$transaction(async (tx) => {
