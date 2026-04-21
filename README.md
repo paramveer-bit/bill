@@ -19,3 +19,10 @@ reciet
 purchasebatch
 SaleBatchAllocation
 SaleLine
+
+---
+
+Pagination in
+Coustomer list
+Get Products
+Get Receipts

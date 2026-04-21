@@ -1,56 +1,129 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/lib/generated/prisma"
 }
 
 datasource db {
-  provider = "postgresql" // or "mysql"
+  provider = "postgresql"
+}
+
+model user {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  password             String
+  name                 String?
+  role                 String
+  isOnboarded          Boolean   @default(false)
+  isEmailVerified      Boolean   @default(false)
+  lastLoginAt          DateTime?
+  lastPasswordChangeAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  purchases        Purchase[]
+  sales            Sale[]
+  receipts         Receipt[]
+  supplierPayments SupplierPayment[]
+  products         Product[]
+  suppliers        Supplier[]
+  customers        Customer[]
+  categories       Category[]
+  refreshTokens    RefreshToken[]
+  sessions         Session[]
+
+  @@index([email])
+  @@index([isEmailVerified])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  token     String    @unique
+  user      user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  expiresAt DateTime
+  isRevoked Boolean   @default(false)
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  sessionId String    @unique // <-- link to session
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([isRevoked])
+}
+
+model Session {
+  id             String    @id @default(uuid())
+  user           user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId         String
+  ipAddress      String?
+  userAgent      String?
+  isActive       Boolean   @default(true)
+  lastActivityAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime?
+
+  @@index([userId])
+  @@index([isActive])
+  @@index([lastActivityAt])
+}
+
+model OtpVerification {
+  id          String    @id @default(uuid())
+  email       String
+  otpHash     String
+  otpExpiry   DateTime
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  isVerified  Boolean   @default(false)
+  verifiedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+
+  @@unique([email, isVerified])
+  @@index([email])
+  @@index([expiresAt])
 }
 
 model Supplier {
-  id             String            @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
   contactName    String?
   phone          String?
   email          String?
   gstNumber      String?
   address        String?
-  createdAt      DateTime          @default(now())
-  balance        Decimal           @default(0.00) @db.Decimal(12, 2)
-  openingBalance Decimal           @default(0.00) @db.Decimal(12, 2)
-  // Relations
-  purchases      Purchase[]
-  payments       SupplierPayment[]
+  createdAt      DateTime @default(now())
+  balance        Decimal  @default(0.00) @db.Decimal(12, 2)
+  openingBalance Decimal  @default(0.00) @db.Decimal(12, 2)
+  createdBy      user     @relation(fields: [createdById], references: [id])
+  createdById    String
+
+  purchases Purchase[]
+  payments  SupplierPayment[]
 }
 
-// 2. Updated Purchase Model (Linked to Supplier)
-
-// 3. New SupplierPayment Model (To reduce balance)
 model SupplierPayment {
   id            String   @id @default(uuid())
   supplier      Supplier @relation(fields: [supplierId], references: [id])
   supplierId    String
   amount        Decimal  @db.Decimal(12, 2)
-  paymentMode   String // e.g., Cash, Bank Transfer, UPI
-  checkNo       String? // Optional, only for cheque payments
-  transactionId String? // Optional, for non-cheque payments
-  remarks       String? // Optional notes about the payment
+  paymentMode   String
+  checkNo       String?
+  transactionId String?
+  remarks       String?
   paymentDate   DateTime
-  reference     String? // Cheque no, Transaction ID
+  reference     String?
   createdAt     DateTime @default(now())
+  createdBy     user     @relation(fields: [createdById], references: [id])
+  createdById   String
 }
 
 model Product {
   id               String    @id @default(uuid())
   sku              String?   @unique
   name             String
-  baseUnit         String // the atomic unit you stock in — always "Pcs" 
+  baseUnit         String
   currentSellPrice Decimal?  @db.Decimal(12, 2)
   taxRate          Decimal?  @db.Decimal(5, 2)
   isStockItem      Boolean   @default(true)
@@ -58,8 +131,9 @@ model Product {
   updatedAt        DateTime  @updatedAt
   category         Category? @relation(fields: [categoryId], references: [id])
   categoryId       String?
+  createdBy        user      @relation(fields: [createdById], references: [id])
+  createdById      String
 
-  // relations
   priceHistory    ProductPriceHistory[]
   purchaseBatches PurchaseBatch[]
   saleLines       SaleLine[]
@@ -70,29 +144,27 @@ model UnitConversion {
   id            String   @id @default(uuid())
   product       Product  @relation(fields: [productId], references: [id])
   productId     String
-  unitName      String // "Case", "Ladi", "Pcs"
-  conversionQty Int // how many base units (Pcs) = 1 of this unit
+  unitName      String
+  conversionQty Int
   createdAt     DateTime @default(now())
 
   @@unique([productId, unitName])
 }
 
 model Category {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String     @id @default(uuid())
+  name        String     @unique
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  createdBy   user       @relation(fields: [createdById], references: [id])
+  createdById String
 
-  // Self-referential relation
-  parentId String?
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-
-  // Relations
   products Product[]
 
-  // Ensure name is unique within a parent scope
   @@unique([name, parentId])
 }
 
@@ -100,8 +172,8 @@ model ProductPriceHistory {
   id            String   @id @default(uuid())
   product       Product  @relation(fields: [productId], references: [id])
   productId     String
-  price         Decimal  @db.Decimal(12, 2) // selling price
-  effectiveFrom DateTime // price effective from this datetime
+  price         Decimal  @db.Decimal(12, 2)
+  effectiveFrom DateTime
   note          String?
   createdAt     DateTime @default(now())
 
@@ -109,18 +181,21 @@ model ProductPriceHistory {
 }
 
 model Customer {
-  id             String    @id @default(uuid())
+  id             String   @id @default(uuid())
   name           String
   phone          String?
   email          String?
   gstNumber      String?
   address        String?
-  balance        Decimal   @default(0.00) @db.Decimal(12, 2)
-  openingBalance Decimal   @default(0.00) @db.Decimal(12, 2) // New field for opening balance
-  createdAt      DateTime  @default(now())
+  balance        Decimal  @default(0.00) @db.Decimal(12, 2)
+  openingBalance Decimal  @default(0.00) @db.Decimal(12, 2)
+  createdAt      DateTime @default(now())
   town           String
-  sales          Sale[]
-  receipts       Receipt[]
+  createdBy      user     @relation(fields: [createdById], references: [id])
+  createdById    String
+
+  sales    Sale[]
+  receipts Receipt[]
 }
 
 model Purchase {
@@ -131,63 +206,60 @@ model Purchase {
   purchaseDate DateTime
   totalAmount  Decimal  @db.Decimal(12, 2)
   createdAt    DateTime @default(now())
+  createdBy    user     @relation(fields: [createdById], references: [id])
+  createdById  String
 
   batches PurchaseBatch[]
 }
 
 model PurchaseBatch {
-  id              String                @id @default(uuid())
-  product         Product               @relation(fields: [productId], references: [id])
-  productId       String
-  purchase        Purchase?             @relation(fields: [purchaseId], references: [id])
-  purchaseId      String?
-  qtyReceived     Int
-  qtyRemaining    Int
-  unitCost        Decimal               @db.Decimal(12, 2)
-  receivedAt      DateTime              @default(now())
-  sellingPrice    Decimal?              @db.Decimal(12, 2) // optional selling price for this batch
-  mrp             Decimal               @db.Decimal(12, 2) // optional MRP for this batch
+  id           String    @id @default(uuid())
+  product      Product   @relation(fields: [productId], references: [id])
+  productId    String
+  purchase     Purchase? @relation(fields: [purchaseId], references: [id])
+  purchaseId   String?
+  qtyReceived  Int
+  qtyRemaining Int
+  unitCost     Decimal   @db.Decimal(12, 2)
+  receivedAt   DateTime  @default(now())
+  sellingPrice Decimal?  @db.Decimal(12, 2)
+  mrp          Decimal   @db.Decimal(12, 2)
+
   saleAllocations SaleBatchAllocation[]
 }
 
 model Sale {
-  id         String    @id @default(uuid())
-  invoiceNo  String    @unique
-  customer   Customer? @relation(fields: [customerId], references: [id])
-  customerId String?
-
-  // ------------------ Customer details on sale for historical accuracy, even if they change later
-  customerName    String? // snapshot of customer name at time of sale
-  customerGST     String? // snapshot of customer GST number at time of sale
-  customerPhone   String? // snapshot of customer phone number at time of sale
-  customerAddress String? // snapshot of customer address at time of sale
-  // ------------------
+  id              String    @id @default(uuid())
+  invoiceNo       String    @unique
+  customer        Customer? @relation(fields: [customerId], references: [id])
+  customerId      String?
+  customerName    String?
+  customerGST     String?
+  customerPhone   String?
+  customerAddress String?
   saleDate        DateTime
-  totalAmount     Decimal  @db.Decimal(12, 2)
-  createdAt       DateTime @default(now())
+  totalAmount     Decimal   @db.Decimal(12, 2)
+  createdAt       DateTime  @default(now())
+  createdBy       user      @relation(fields: [createdById], references: [id])
+  createdById     String
 
   lines SaleLine[]
 }
 
 model SaleLine {
-  id        String  @id @default(uuid())
-  sale      Sale    @relation(fields: [saleId], references: [id])
-  saleId    String
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
-
-  // We store the unit details on the line for historical accuracy, even if they change later
-  qty      Int // Base unit quantity (in Pcs)
-  unitQty  Int // the quantity in the unit sold (e.g., 1 Case = 12 Pcs, so unitQty=1, qty=12)
-  unitname String // "Case", "Ladi", "Pcs" - for reference, not used in calculations  
-
-  //----------product details
-  productName   String // snapshot of product name at time of sale
-  // We store the price details on the line for historical accuracy, even if they change later 
-  unitSellPrice Decimal  @db.Decimal(12, 2) // the final price charged to customer
+  id            String   @id @default(uuid())
+  sale          Sale     @relation(fields: [saleId], references: [id])
+  saleId        String
+  product       Product  @relation(fields: [productId], references: [id])
+  productId     String
+  qty           Int
+  unitQty       Int
+  unitname      String
+  productName   String
+  unitSellPrice Decimal  @db.Decimal(12, 2)
   taxRate       Decimal? @db.Decimal(5, 2)
   lineTotal     Decimal  @db.Decimal(12, 2)
-  costAllocated Decimal  @db.Decimal(12, 2) // COGS for this line (sum of allocations)
+  costAllocated Decimal  @db.Decimal(12, 2)
   createdAt     DateTime @default(now())
 
   allocations SaleBatchAllocation[]
@@ -200,7 +272,7 @@ model SaleBatchAllocation {
   purchaseBatch   PurchaseBatch @relation(fields: [purchaseBatchId], references: [id])
   purchaseBatchId String
   qtyAllocated    Int
-  unitCost        Decimal       @db.Decimal(12, 2) // snapshot of the batch unit cost used
+  unitCost        Decimal       @db.Decimal(12, 2)
 }
 
 model Receipt {
@@ -212,4 +284,6 @@ model Receipt {
   receiptDate DateTime
   remarks     String?
   createdAt   DateTime @default(now())
+  createdBy   user     @relation(fields: [createdById], references: [id])
+  createdById String
 }
