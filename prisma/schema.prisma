@@ -45,7 +45,7 @@ model RefreshToken {
   revokedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-  sessionId String    @unique // <-- link to session
+  sessionId String // <-- link to session
 
   @@index([userId])
   @@index([expiresAt])

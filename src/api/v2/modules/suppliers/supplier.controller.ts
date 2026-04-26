@@ -87,6 +87,20 @@ export const getSuppliers = asyncHandler(async (req: Request, res: Response) => 
     );
 });
 
+//------------------------GET ALL SUPPLIERS WITH BALANCE------------------------
+export const getAllSuppliers = asyncHandler(async (req: Request, res: Response) => {
+    const authUser = getAuthUser(req);
+    // 1. Call service with auth user
+    const suppliers = await supplierService.getSuppliersWithBalance(authUser);
+    // 2. Return response
+    res.status(200).json(
+        new ApiResponse('Suppliers with balance retrieved', {
+            count: suppliers.length,
+            data: suppliers.map(formatSupplierResponse),
+        })
+    );
+});
+
 // ============ GET SUPPLIER BY ID ============
 export const getSupplierById = asyncHandler(async (req: Request, res: Response) => {
     const authUser = getAuthUser(req);

@@ -233,10 +233,10 @@ export async function login(
 // Token Refresh Service
 // ============================================
 
-export async function refreshAccessToken(refreshToken: string): Promise<TokenResponse> {
+export async function refreshAccessToken(refreshToken: string): Promise<AuthResponse> {
 
     const { userId, refreshTokenHash } = verifyToken(refreshToken);
-    // console.log(userId + "-----------------" + refreshTokenHash);
+    console.log(userId + "-----------------" + refreshTokenHash);
     if (!userId) {
         throw new ApiError(401, 'Invalid refresh token');
     }
@@ -260,18 +260,23 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
     const newRefreshTokenHash = await PasswordRepository.hash(newRefreshTokenString);
 
     const newRefreshToken = generateRefreshTokenJwt(user.id, newRefreshTokenHash)
-    await RefreshTokenRepository.updateAccessToken(
-        validToken.id,
-        newRefreshTokenHash,
-        new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
-    );
+    await RefreshTokenRepository.create({
+        userId: user.id,
+        token: newRefreshTokenHash,
+        expiresAt: new Date(Date.now() + REFRESH_TOKEN_EXPIRY),
+        sessionId: validToken.sessionId,
+    })
+
+    await RefreshTokenRepository.revoke(validToken.id);
 
     const accessToken = generateAccessToken(user.id, user.email, user.role);
-
+    console.log(accessToken + "-----------------" + newRefreshToken);
     return {
         accessToken,
         refreshToken: newRefreshToken,
         expiresIn: Math.floor(ACCESS_TOKEN_EXPIRY / 1000),
+        user: formatUserResponse(user),
+
     };
 
 }
@@ -283,19 +288,20 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenRes
 export async function logout(userId: string, refreshToken: string): Promise<void> {
 
     const tokens = await RefreshTokenRepository.findByUserId(userId);
+    const { refreshTokenHash } = verifyToken(refreshToken);
 
-    for (const token of tokens) {
-        const isMatch = await PasswordRepository.compare(refreshToken, token.token);
-        if (isMatch && !token.isRevoked) {
-            await RefreshTokenRepository.revoke(token.id);
-            // Only deactivate the session tied to THIS token
-            if (token.sessionId) {
-                await SessionRepository.deactivate(token.sessionId);
-            }
-            break;
+    const validToken = await RefreshTokenRepository.findByUserIdOne(userId, refreshTokenHash);
 
-        }
+    if (!validToken) {
+        throw new ApiError(400, 'Invalid refresh token');
     }
+
+    await RefreshTokenRepository.revoke(validToken.id);
+
+    if (validToken.sessionId) {
+        await SessionRepository.deactivate(validToken.sessionId);
+    }
+
 
 
 }

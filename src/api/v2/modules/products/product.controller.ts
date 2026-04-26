@@ -29,7 +29,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
     // 1. Validate input
     const parsedData = createProductSchema.safeParse(req.body);
     if (!parsedData.success) {
-        throw new ApiError(400, 'Invalid input data');
+        throw new ApiError(400, 'Invalid input data', parsedData.error.issues);
     }
 
     // 2. Call service with auth user
@@ -50,10 +50,10 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
         categoryId: req.query.categoryId,
         search: req.query.search,
         lowStockThreshold: req.query.lowStockThreshold,
-        page: req.query.page ? parseInt(req.query.page as string) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
     });
-
+    console.log("Parsed query params:", parsedParams, req.query);
     if (!parsedParams.success) {
         throw new ApiError(400, 'Invalid query parameters');
     }
@@ -66,6 +66,7 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
         new ApiResponse('Products retrieved successfully', result)
     );
 });
+
 
 // ============ GET PRODUCT BY ID ============
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {

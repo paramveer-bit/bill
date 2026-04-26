@@ -1,9 +1,10 @@
 // src/api/v1/modules/sale/sale.routes.ts
 import { Router } from 'express';
-// import { verifyAuth } from '@/middleware/auth';
+import { authMiddleware } from '@/middlewares/auth.middelware.js';
 import * as saleController from './sale.controller.js';
 
 const router = Router();
+
 
 /**
  * Routes layer — maps HTTP endpoints to controller handlers.
@@ -12,7 +13,7 @@ const router = Router();
  * ⚠️ Static routes (/summary) MUST be declared before parameterised routes (/:id)
  */
 
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 // POST   /api/v1/sales             — Create sale (FIFO allocation)
 router.post('/', saleController.createSale);

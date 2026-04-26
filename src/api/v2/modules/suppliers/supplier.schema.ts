@@ -25,7 +25,6 @@ export const supplierBaseSchema = z.object({
         .nullable(),
 
     gstNumber: z.string()
-        .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/, "Invalid GST number format")
         .optional()
         .nullable(),
 
@@ -37,26 +36,20 @@ export const supplierBaseSchema = z.object({
 
 // ============ CREATE SCHEMA ============
 export const createSupplierSchema = supplierBaseSchema.extend({
-    openingBalance: z.instanceof(Decimal)
-        .refine((val) => val.gte(0), "Opening balance cannot be negative")
-        .optional()
-        .default(new Decimal(0)),
+    openingBalance: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative")
+        .nullable(),
 });
 
 // ============ UPDATE SCHEMA ============
-export const updateSupplierSchema = supplierBaseSchema
-    .extend({
-        openingBalance: z.instanceof(Decimal)
-            .refine((val) => val.gte(0), "Opening balance cannot be negative")
-            .optional(),
-    })
-    .partial();
+export const updateSupplierSchema = supplierBaseSchema.partial();
 
 // ============ LIST/FILTER SCHEMA ============
 export const listSuppliersSchema = z.object({
     search: z.string().optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(20),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(20),
     sortBy: z.string().default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

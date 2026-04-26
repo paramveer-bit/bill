@@ -6,6 +6,7 @@ import PrismaClient from "../../../prismaClient/index.js"
 import { customerSchema } from "../schemas/customer.schema.js"
 
 
+
 export const createCustomer = asyncHandler(async (req: Request, res: Response) => {
     const parsedData = customerSchema.safeParse(req.body);
     if (!parsedData.success) {

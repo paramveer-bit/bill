@@ -14,6 +14,7 @@ import { getAuthUser } from '../auth.js';
 const customerService = new CustomerService();
 
 
+
 // ============ CREATE CUSTOMER ============
 export const createCustomer = asyncHandler(async (req: Request, res: Response) => {
     //Get auth user 
@@ -38,7 +39,6 @@ export const createCustomer = asyncHandler(async (req: Request, res: Response) =
 // ============ LIST CUSTOMERS ============
 export const listCustomers = asyncHandler(async (req: Request, res: Response) => {
     const authUser = getAuthUser(req);
-
 
     // 1. Validate query params
     const parsedParams = listCustomersSchema.safeParse(req.query);

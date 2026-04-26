@@ -3,6 +3,7 @@ import type { Customer, CreateCustomerInput, UpdateCustomerInput } from './custo
 import type { Prisma } from '@/lib/generated/prisma/browser.js';
 
 
+
 export class CustomerRepository {
 
     // Create a new customer
@@ -23,10 +24,10 @@ export class CustomerRepository {
     }
 
     // Find a customers
-    static async findMany(skip: number, take: number, createdById: string, search?: string): Promise<Customer[]> {
+    static async findMany(createdById: string, search?: string, skip?: number, take?: number): Promise<Customer[]> {
         return PrismaClient.customer.findMany({
-            skip,
-            take,
+            ...(skip !== undefined ? { skip } : {}),
+            ...(take !== undefined ? { take } : {}),
             where: search ? {
                 OR: [
                     { name: { contains: search, mode: 'insensitive' } },

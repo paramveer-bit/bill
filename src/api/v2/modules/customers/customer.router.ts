@@ -1,7 +1,7 @@
 // src/api/v1/modules/customer/customer.routes.ts
 import { Router } from 'express';
 import * as customerController from './customer.controller.js';
-// import { verifyAuth } from '@/middleware/auth'; // ← Auth middleware
+import { authMiddleware } from '@/middlewares/auth.middelware.js'; // ← Auth middleware
 
 const router = Router();
 
@@ -10,15 +10,15 @@ const router = Router();
  * Maps HTTP requests to controller functions
  */
 
-// router.use(verifyAuth);
+router.use(authMiddleware); // Apply auth middleware to all customer routes
 
 // ============ CUSTOMER ROUTES ============
 
 // GET /api/v1/customers - Get all customers
-router.get('/', customerController.listCustomers);
+router.get('/', customerController.listCustomers);//checked and implemented
 
 // POST /api/v1/customers - Create new customer
-router.post('/', customerController.createCustomer);
+router.post('/', customerController.createCustomer);//checked and implemented
 
 // GET /api/v1/customers/:id - Get customer by ID
 router.get('/:id', customerController.getCustomerById);
@@ -30,9 +30,10 @@ router.get('/:id', customerController.getCustomerById);
 // router.get('/:id/stats', customerController.getCustomerStats);
 
 // // PUT /api/v1/customers/:id - Update customer
-router.put('/:id', customerController.updateCustomer);
+router.put('/:id', customerController.updateCustomer);//checked and implemented
 
 // // DELETE /api/v1/customers/:id - Delete customer
 // router.delete('/:id', customerController.deleteCustomer);
+
 
 export default router;

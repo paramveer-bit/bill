@@ -94,8 +94,8 @@ export class ProductRepository {
     // ============ READ MANY WITH STOCK ============ used
     static async findManyWithStock(filters: {
         createdById: string;
-        skip?: number;
-        take?: number;
+        skip: number | undefined;
+        take: number | undefined;
         categoryId?: string;
         search?: string; // ← Filter by user
     }): Promise<Array<ProductWithRelations & { purchaseBatches: Array<{ qtyRemaining: number }> }>> {

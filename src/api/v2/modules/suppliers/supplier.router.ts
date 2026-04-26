@@ -1,6 +1,6 @@
 // src/api/v1/modules/supplier/supplier.routes.ts
 import { Router } from 'express';
-// import { verifyAuth } from '@/middleware/auth'; // ← Auth middleware
+import { authMiddleware } from '@/middlewares/auth.middelware.js'; // ← Auth middleware
 import * as supplierController from './supplier.controller.js';
 
 const router = Router();
@@ -9,21 +9,22 @@ const router = Router();
  * Routes layer - ONLY defines endpoint paths and methods
  * Maps HTTP requests to controller functions
  * 
- * ⚠️ NOTE: All routes protected with verifyAuth middleware
+ * ⚠️ NOTE: All routes protected with authMiddleware
  */
 
 // ============ AUTH MIDDLEWARE ============
 // All supplier routes require authentication
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 // ============ SUPPLIER ROUTES ============
 
 // POST /api/v1/suppliers - Create new supplier
-router.post('/', supplierController.createSupplier);
+router.post('/', supplierController.createSupplier);//checked and implemented
 
 // GET /api/v1/suppliers - Get all suppliers with filters
 // Query params: ?search=, ?page=1, ?limit=20, ?sortBy=, ?sortOrder=
 router.get('/', supplierController.getSuppliers);
+router.get('/all', supplierController.getAllSuppliers);
 
 // GET /api/v1/suppliers/balance - Get suppliers with balance info
 // new 
@@ -42,7 +43,7 @@ router.get('/:id', supplierController.getSupplierById);
 router.get('/:id/stats', supplierController.getSupplierStats);
 
 // PUT /api/v1/suppliers/:id - Update supplier
-router.put('/:id', supplierController.updateSupplier);
+router.put('/:id', supplierController.updateSupplier);//checked and implemented
 
 // DELETE /api/v1/suppliers/:id - Delete supplier
 // router.delete('/:id', supplierController.deleteSupplier);

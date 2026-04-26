@@ -39,8 +39,8 @@ export const listSalesSchema = z.object({
         .enum(['saleDate', 'totalAmount', 'invoiceNo', 'createdAt'])
         .default('saleDate'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(30),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(30),
 });
 
 

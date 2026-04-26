@@ -2,7 +2,7 @@ import express from "express"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import exp from "constants"
-import { errorHandler } from "./middelwares/errorHandler.js"
+import { errorHandler } from "./middlewares/errorHandler.js"
 // import PrismaClient from "./prismaClient/index"
 // const UAParser = require("ua-parser-js");
 
@@ -63,15 +63,15 @@ import salesMasterV2 from "./api/v2/modules/sales/sale.router.js"
 import receiptRouterV2 from "./api/v2/modules/receipt/receipt.router.js"
 import authRouter from "./api/v2/modules/auth/auth.router.js"
 
-app.use("/api/v1/customers", customerRouterV2)
-app.use("/api/v1/supplier-payments", supplierRouterPaymetV2)
-app.use("/api/v1/suppliers", supplierRouterV2)
-app.use("/api/v1/categories", categoriesRouterV2)
-app.use("/api/v1/products", productRouterV2)
-app.use("/api/v1/purchases", purchaseRouterV2)
-app.use("/api/v1/sales", salesMasterV2)
-app.use("/api/v1/receipts", receiptRouterV2)
-app.use("/api/v2/auth", authRouter)
+app.use("/api/v2/customers", customerRouterV2)
+app.use("/api/v2/supplier-payments", supplierRouterPaymetV2)
+app.use("/api/v2/suppliers", supplierRouterV2)//checked and implemented
+app.use("/api/v2/categories", categoriesRouterV2)//checked and implemented
+app.use("/api/v2/products", productRouterV2)
+app.use("/api/v2/purchases", purchaseRouterV2)
+app.use("/api/v2/sales", salesMasterV2)
+app.use("/api/v2/receipts", receiptRouterV2)
+app.use("/api/v2/auth", authRouter)//checked and implemented
 
 
 

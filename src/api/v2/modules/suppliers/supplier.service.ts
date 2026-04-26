@@ -67,7 +67,7 @@ export class SupplierService {
                 page,
                 limit,
                 totalRecords: total,
-                pages: totalPages,
+                totalPages: totalPages,
             },
         };
     }
@@ -179,6 +179,12 @@ export class SupplierService {
             lastPurchaseDate: stats.lastPurchaseDate?.toISOString() || null,
             totalTransactions: stats.purchaseCount + stats.paymentCount,
         };
+    }
+
+    async getAllSuppliers(authUser: AuthUser): Promise<SupplierWithRelations[]> {
+        return SupplierRepository.findMany({
+            createdById: authUser.id,
+        });
     }
 
     // ============ GET SUPPLIERS WITH BALANCE ============

@@ -44,8 +44,8 @@ export const listReceiptsSchema = z.object({
         .default('all'),
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(30),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(30),
     sortBy: z.string().default('receiptDate'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

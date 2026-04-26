@@ -84,7 +84,7 @@ export class PurchaseRepository {
                 batches.map(async (batch) => {
                     const currentProduct = existingProducts.find((p) => p.id === batch.productId)!;
                     const currentPrice = Number(currentProduct.currentSellPrice ?? 0);
-                    const priceChanged = currentPrice !== batch.sellingPrice;
+                    const priceChanged = currentPrice !== batch.sellingPrice.toNumber();
 
                     if (priceChanged) {
                         await tx.product.update({

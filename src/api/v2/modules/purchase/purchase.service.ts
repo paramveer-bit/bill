@@ -64,7 +64,7 @@ export class PurchaseService {
     ): Promise<PurchaseWithRelations> {
         // ── Pre-flight: supplier exists & user owns it ───────────────────────────
         const supplier = await PrismaClient.supplier.findUnique({
-            where: { id: data.supplierId },
+            where: { id: data.supplierId, createdById: authUser.id },
         });
         if (!supplier) throw new ApiError(400, 'Supplier not found');
 
@@ -92,7 +92,7 @@ export class PurchaseService {
 
         // ── Pre-flight: totalAmount matches calculated sum ───────────────────────
         const calculatedTotal = data.batches.reduce(
-            (sum, b) => sum + b.qtyReceived * b.unitCost,
+            (sum, b) => sum + b.qtyReceived * b.unitCost?.toNumber(),
             0
         );
         if (calculatedTotal !== data.totalAmount.toNumber()) {
@@ -206,6 +206,7 @@ export class PurchaseService {
                 totalPages: Math.ceil(total / limit),
             },
             summary: {
+                purchaseCount: total,
                 totalSpend,
                 totalLineItems,
             }

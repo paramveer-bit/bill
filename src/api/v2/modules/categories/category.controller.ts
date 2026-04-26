@@ -46,7 +46,7 @@ export const getCategories = asyncHandler(async (req: Request, res: Response) =>
     });
 
     if (!parsedParams.success) {
-        throw new ApiError(400, 'Invalid query parameters');
+        throw new ApiError(400, 'Invalid query parameters', parsedParams.error.issues);
     }
 
     // 2. Call service

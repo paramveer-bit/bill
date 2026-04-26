@@ -9,9 +9,10 @@ const customerSchema = z.object({
     gstNumber: z.string().nullable(),  // Allow null
     address: z.string().nullable(),
     town: z.string(),
-    openingBalance: z.instanceof(Decimal),  // Use Decimal type
-    balance: z.instanceof(Decimal),         // Use Decimal type
-
+    openingBalance: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative")
+        .nullable(),  // Use Decimal type
     createdAt: z.date()
 });
 export type Customer = z.infer<typeof customerSchema>;
@@ -30,15 +31,15 @@ export const createCustomerSchema = customerSchema.omit({ id: true, createdAt: t
 
 // ============ UPDATE SCHEMA ============
 export const updateCustomerSchema = customerSchema
-    .omit({ id: true, createdAt: true })
+    .omit({ id: true, createdAt: true, openingBalance: true })
     .partial();
 // All fields optional for updates
 
 
 // ============ LIST/FILTER SCHEMA ============
 export const listCustomersSchema = z.object({
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(20),
+    page: z.coerce.number().optional(),
+    limit: z.coerce.number().min(1).max(100).optional(),
     search: z.string().optional(), // search by name or email
     town: z.string().optional(),
 });

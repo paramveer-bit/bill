@@ -1,6 +1,6 @@
 // src/api/v1/modules/product/product.routes.ts
 import { Router } from 'express';
-// import { verifyAuth } from '@/middleware/auth'; // ← Auth middleware
+import { authMiddleware } from '@/middlewares/auth.middelware.js'; // ← Auth middleware
 import * as productController from './product.controller.js';
 
 const router = Router();
@@ -14,7 +14,7 @@ const router = Router();
 
 // ============ AUTH MIDDLEWARE ============
 // All product routes require authentication
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 // ============ PRODUCT ROUTES ============
 
@@ -32,7 +32,7 @@ router.get('/low-stock', productController.getLowStockProducts);
 router.get('/stats', productController.getProductStats);
 
 // POST /api/v1/products - Create new product
-router.post('/', productController.createProduct);
+router.post('/', productController.createProduct);//checked and implemented
 
 // GET /api/v1/products/:id - Get product by ID
 router.get('/:id', productController.getProductById);
@@ -41,12 +41,12 @@ router.get('/:id', productController.getProductById);
 router.get('/:id/stock-info', productController.getProductStockInfo);
 
 // PUT /api/v1/products/:id - Update product
-router.put('/:id', productController.updateProduct);
+router.put('/:id', productController.updateProduct);//checked and implemented
 
 // DELETE /api/v1/products/:id - Delete product
 // router.delete('/:id', productController.deleteProduct);
 
 // GET /api/v1/products/category/:categoryId - Get products by category
-router.get('/category/:categoryId', productController.getProductsByCategory);
+router.get('/category/:categoryId', productController.getProductsByCategory);//checked and implemented
 
 export default router;

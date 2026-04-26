@@ -1,6 +1,6 @@
 // src/api/v1/modules/purchase/purchase.routes.ts
 import { Router } from 'express';
-// import { verifyAuth } from '@/middleware/auth';
+import { authMiddleware } from '@/middlewares/auth.middelware.js';
 import * as purchaseController from './purchase.controller.js';
 
 const router = Router();
@@ -10,14 +10,14 @@ const router = Router();
  * All routes require authentication via verifyAuth middleware.
  */
 
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 // POST   /api/v1/purchases          — Create new purchase
-router.post('/', purchaseController.createPurchase);
+router.post('/', purchaseController.createPurchase);//checked and implemented
 
 // GET    /api/v1/purchases          — List purchases (with filters & pagination)
 // Query: ?supplierId= &invoiceNo= &search= &startDate= &endDate= &dateFilter= &page= &limit=
-router.get('/', purchaseController.getPurchases);
+router.get('/', purchaseController.getPurchases);//checked and implemented
 
 // GET    /api/v1/purchases/:id      — Get full purchase detail by ID
 router.get('/:id', purchaseController.getPurchaseById);

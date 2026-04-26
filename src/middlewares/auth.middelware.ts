@@ -9,24 +9,32 @@ import asyncHandler from "@/helpers/asynchandeler.js";
 export const authMiddleware = asyncHandler((req: Request, res: Response, next: NextFunction) => {
 
     const token = req.headers.authorization?.split(' ')[1];
-
+    // console.log("Auth token received:", token);
     if (!token) {
         throw new ApiError(401, 'No authorization token provided');
     }
 
-    const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded || typeof decoded === 'string' || !decoded.userId) {
-        throw new ApiError(401, 'Invalid token payload');
-    }
-    // Add user info to request
-    req.user = {
-        id: decoded.userId,
-        email: decoded.email,
-        role: decoded.role,
-    }
+    try {
+        const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+        const decoded = jwt.verify(token, JWT_SECRET);
 
-    next();
+        if (!decoded || typeof decoded === 'string' || !decoded.userId) {
+            throw new ApiError(401, 'Invalid token payload');
+        }
+
+        req.user = {
+            id: decoded.userId,
+            email: decoded.email,
+            role: decoded.role,
+        };
+
+        next();
+    } catch (error: any) {
+        if (error.name === 'TokenExpiredError') {
+            throw new ApiError(401, 'Token has expired');
+        }
+        throw new ApiError(401, 'Authentication failed');
+    }
 })
 
 /**
@@ -45,6 +53,7 @@ export function optionalAuthMiddleware(req: Request, res: Response, next: NextFu
 
         next();
     } catch (error) {
+        console.error('Error in optionalAuthMiddleware:', error);
         // Continue even if token is invalid
         next();
     }

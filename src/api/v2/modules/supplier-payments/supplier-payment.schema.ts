@@ -59,8 +59,8 @@ export const listSupplierPaymentsSchema = z.object({
     search: z.string().optional(),
     startDate: z.string().datetime().optional(),
     endDate: z.string().datetime().optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(30),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(30),
     sortBy: z.string().default('paymentDate'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

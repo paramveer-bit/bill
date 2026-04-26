@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import * as authController from './auth.controller.js';
-import { authMiddleware } from "@/middelwares/auth.middelware.js";
+import { authMiddleware } from "@/middlewares/auth.middelware.js";
 const router = Router();
 
 // ============================================
@@ -49,7 +49,7 @@ router.get('/refresh', authController.refresh);//checked and implemented
  * GET /api/v2/auth/health
  * Health check
  */
-router.get('/health', authController.healthCheck);
+router.get('/health', authMiddleware, authController.healthCheck);//checked and implemented
 
 // ============================================
 // Protected Routes (Auth Required)
@@ -59,7 +59,7 @@ router.get('/health', authController.healthCheck);
  * POST /api/v2/auth/logout
  * Logout current session
  */
-router.post('/logout', authMiddleware, authController.logout);
+router.post('/logout', authMiddleware, authController.logout);//checked and implemented
 
 /**
  * POST /api/v2/auth/logout-all

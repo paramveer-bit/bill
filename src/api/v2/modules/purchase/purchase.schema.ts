@@ -7,9 +7,15 @@ import type { Decimal as decimal } from '@/lib/generated/prisma/internal/prismaN
 export const purchaseBatchSchema = z.object({
     productId: z.string().min(1, 'Product ID is required'),
     qtyReceived: z.number().int().positive('Quantity must be a positive integer'),
-    unitCost: z.number().positive('Unit cost must be positive').finite(),
-    sellingPrice: z.number().positive('Selling price must be positive').finite(),
-    mrp: z.number().positive('MRP must be positive').finite(),
+    unitCost: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative"),
+    sellingPrice: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative"),
+    mrp: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative")
 });
 
 // ============ CREATE SCHEMA ============
@@ -25,8 +31,9 @@ export const createPurchaseSchema = z.object({
         .nullable()
         .transform((val) => (val ? new Date(val) : new Date())),
 
-    totalAmount: z.instanceof(Decimal)
-        .refine((val) => val.gt(0), 'Total amount must be greater than zero'),
+    totalAmount: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative"),
 
     batches: z
         .array(purchaseBatchSchema)
@@ -43,8 +50,8 @@ export const listPurchasesSchema = z.object({
     dateFilter: z
         .enum(['1day', 'week', 'month', 'prevmonth', 'quarter', 'all'])
         .optional(),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(20),
+    page: z.coerce.number().min(1).default(1),
+    limit: z.coerce.number().min(1).max(100).default(20),
 });
 
 

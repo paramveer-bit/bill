@@ -17,21 +17,21 @@ export class CustomerService {
     }
 
     async listCustomers(params: ListCustomersInput, authUser: AuthUser) {
-        const { page = 1, limit = 10, search } = params;
-        const skip = (page - 1) * limit;
+        const { page, limit, search } = params;
+        const skip = (!page || !limit) ? undefined : (page - 1) * limit;
         const [customers, totalRecords] = await Promise.all([
-            CustomerRepository.findMany(skip, limit, authUser.id, search),
+            CustomerRepository.findMany(authUser.id, search, skip, limit),
             CustomerRepository.count(authUser.id, search),
         ]);
 
         return {
             data: customers,
-            pagination: {
+            meta: limit ? {
                 page,
                 limit,
                 totalRecords,
                 totalPages: Math.ceil(totalRecords / limit),
-            },
+            } : null,
         };
     }
 

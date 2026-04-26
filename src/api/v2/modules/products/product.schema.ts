@@ -29,12 +29,13 @@ export const productBaseSchema = z.object({
         .min(1, "Base unit is required")
         .max(50, "Base unit name too long"),
 
-    currentSellPrice: z.instanceof(Decimal)
+    currentSellPrice: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
         .refine((val) => val.gte(0), "Sell price cannot be negative")
         .nullable(),
-    taxRate: z.instanceof(Decimal)
-        .refine((val) => val.gte(0), "Tax rate cannot be negative")
-        .refine((val) => val.lte(100), "Tax rate cannot exceed 100")
+    taxRate: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative")
         .nullable(),
 
     isStockItem: z.boolean()
@@ -64,8 +65,8 @@ export const listProductsSchema = z.object({
     categoryId: z.string().optional(),
     search: z.string().optional(),
     lowStockThreshold: z.string().optional().transform(val => val ? Number(val) : undefined),
-    page: z.number().min(1).default(1),
-    limit: z.number().min(1).max(100).default(20),
+    page: z.number().min(1).optional(),
+    limit: z.number().min(1).max(100).optional()
 });
 
 

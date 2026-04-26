@@ -1,10 +1,10 @@
 // src/api/v1/modules/category/category.routes.ts
 import { Router } from 'express';
 import * as categoryController from './category.controller.js';
-// import { verifyAuth } from '@/middleware/auth'; // ← Auth middleware
+import { authMiddleware } from '@/middlewares/auth.middelware.js'; // ← Auth middleware
 
 const router = Router();
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 /**
  * Routes layer - ONLY defines endpoint paths and methods
@@ -15,7 +15,7 @@ const router = Router();
 
 // GET /api/v1/categories - Get all categories
 // Query params: ?flat=true (returns flat list) or ?flat=false (returns hierarchical)
-router.get('/', categoryController.getCategories);
+router.get('/', categoryController.getCategories);//checked and implemented
 
 // GET /api/v1/categories/tree - Get category tree structure
 // router.get('/tree', categoryController.getCategoryTree);
@@ -27,12 +27,12 @@ router.get('/:id', categoryController.getCategoryById);
 // router.get('/:id/stats', categoryController.getCategoryStats);
 
 // POST /api/v1/categories - Create new category
-router.post('/', categoryController.createCategory);
+router.post('/', categoryController.createCategory);//checked and implemented
 
 // PUT /api/v1/categories/:id - Update category
-router.put('/:id', categoryController.updateCategory);
+router.put('/:id', categoryController.updateCategory);//checked and implemented
 
 // DELETE /api/v1/categories/:id - Delete category (and subcategories)
-router.delete('/:id', categoryController.deleteCategory);
+router.delete('/:id', categoryController.deleteCategory); //checked and implemented
 
 export default router;

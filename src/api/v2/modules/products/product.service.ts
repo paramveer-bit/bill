@@ -58,7 +58,7 @@ export class ProductService {
     // ============ GET ALL PRODUCTS ============
     async getProducts(params: ListProductsInput, createdById: string): Promise<any> {
         const { categoryId = "", search = "", lowStockThreshold, page, limit } = params;
-        const skip = (page - 1) * limit;
+        const skip = (!page || !limit) ? undefined : (page - 1) * limit;
 
         // Get products with stock (only user's products)
         const products = await ProductRepository.findManyWithStock({
@@ -98,12 +98,12 @@ export class ProductService {
 
         return {
             data: filteredProducts,
-            pagination: {
+            pagination: limit ? {
                 page,
                 limit,
                 totalRecords: total,
                 totalPages: Math.ceil(total / limit),
-            },
+            } : null,
         };
     }
 
@@ -162,7 +162,7 @@ export class ProductService {
 
         // Business logic: Validate category if updating
         if (data.categoryId) {
-            const categoryExists = await ProductRepository.findByIdMinimal(data.categoryId);
+            const categoryExists = await CategoryRepository.findByIdMinimal(data.categoryId, authUser.id);
             if (!categoryExists) {
                 throw new ApiError(404, 'Category not found');
             }
@@ -226,7 +226,7 @@ export class ProductService {
         }
 
         // Get products from this category and all subcategories (only user's)
-        const products = await ProductRepository.findByCategoryWithChildren(categoryId, authUser.id);
+        const products = await ProductRepository.findByCategory(categoryId, authUser.id);
 
         return {
             categoryId,
@@ -294,6 +294,8 @@ export class ProductService {
 
         // Get all products with stock (only user's)
         const products = await ProductRepository.findManyWithStock({
+            skip: undefined,
+            take: undefined,
             createdById: authUser.id,
         });
 
