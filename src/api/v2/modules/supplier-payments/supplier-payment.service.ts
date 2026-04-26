@@ -150,7 +150,7 @@ export class SupplierPaymentService {
             },
             summary: {
                 totalAmount: totalSum,
-
+                totalCount: total,
             }
         };
     }

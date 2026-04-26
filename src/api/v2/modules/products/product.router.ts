@@ -38,7 +38,7 @@ router.post('/', productController.createProduct);//checked and implemented
 router.get('/:id', productController.getProductById);
 
 // GET /api/v1/products/:id/stock-info - Get product stock information
-router.get('/:id/stock-info', productController.getProductStockInfo);
+router.get('/:id/stock-info', productController.getProductStockInfo);//checked and implemented
 
 // PUT /api/v1/products/:id - Update product
 router.put('/:id', productController.updateProduct);//checked and implemented

@@ -67,8 +67,8 @@ export class SupplierRepository {
     // ============ READ MANY ============used
     static async findMany(filters: {
         search?: string;
-        skip?: number;
-        take?: number;
+        skip?: number | undefined;
+        take?: number | undefined;
         sortBy?: string;
         sortOrder?: 'asc' | 'desc';
         createdById?: string;

@@ -64,13 +64,13 @@ import receiptRouterV2 from "./api/v2/modules/receipt/receipt.router.js"
 import authRouter from "./api/v2/modules/auth/auth.router.js"
 
 app.use("/api/v2/customers", customerRouterV2)
-app.use("/api/v2/supplier-payments", supplierRouterPaymetV2)
+app.use("/api/v2/supplier-payments", supplierRouterPaymetV2)//checked and implemented
 app.use("/api/v2/suppliers", supplierRouterV2)//checked and implemented
 app.use("/api/v2/categories", categoriesRouterV2)//checked and implemented
 app.use("/api/v2/products", productRouterV2)
-app.use("/api/v2/purchases", purchaseRouterV2)
-app.use("/api/v2/sales", salesMasterV2)
-app.use("/api/v2/receipts", receiptRouterV2)
+app.use("/api/v2/purchases", purchaseRouterV2)//checked and implemented
+app.use("/api/v2/sales", salesMasterV2)//checked and implemented
+app.use("/api/v2/receipts", receiptRouterV2)//checked and implemented
 app.use("/api/v2/auth", authRouter)//checked and implemented
 
 

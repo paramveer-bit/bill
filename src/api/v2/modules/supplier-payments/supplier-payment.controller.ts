@@ -70,7 +70,7 @@ export const getSupplierPayments = asyncHandler(async (req: Request, res: Respon
         startDate: req.query.startDate,
         endDate: req.query.endDate,
         page: req.query.page ? parseInt(req.query.page as string) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 30,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
         sortBy: req.query.sortBy,
         sortOrder: req.query.sortOrder,
     });

@@ -10,6 +10,7 @@ import type {
 import PrismaClient from '@/prismaClient/index.js';
 import type { AuthUser } from '../auth.schema';
 import { validPaymentModes } from '../constants.js';
+import { CustomerRepository } from '../customers/customer.repository.js';
 /**
  * Service layer - Contains all business logic
  * Calls repository for data access
@@ -21,9 +22,9 @@ export class ReceiptService {
     // ============ CREATE RECEIPT ============
     async createReceipt(data: CreateReceiptInput, authUser: AuthUser): Promise<ReceiptWithRelations> {
         // Business logic: Validate customer exists
-        const customer = await ReceiptRepository.findByIdMinimal(data.customerId);
+        const customer = await CustomerRepository.findById(data.customerId, authUser.id);
 
-        if (!customer || customer.createdById !== authUser.id) {
+        if (!customer) {
             throw new ApiError(404, 'Customer not found');
         }
 
@@ -119,6 +120,7 @@ export class ReceiptService {
                 totalPages,
             },
             summary: {
+                receiptsCount: totalRecords,
                 totalReceived: totalSum,
             },
         };

@@ -8,8 +8,9 @@ export const receiptBaseSchema = z.object({
     customerId: z.string()
         .min(1, "Customer ID is required"),
 
-    amount: z.instanceof(Decimal)
-        .refine((val) => val.gte(0), "Amount cannot be negative"),
+    amount: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative"),
 
     paymentMode: z.string()
         .min(1, "Payment mode is required")

@@ -9,8 +9,9 @@ export const saleLineSchema = z.object({
     qty: z.number().int().positive('Quantity must be a positive integer'),
     unitQty: z.number().int().positive('Unit quantity must be a positive integer'),
     unitName: z.string().min(1, 'Unit name is required'),
-    unitSellPrice: z.instanceof(Decimal)
-        .refine((val) => val.gt(0), 'Unit sell price must be greater than zero'),
+    unitSellPrice: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Sell price cannot be negative")
 });
 
 // ============ CREATE SCHEMA ============

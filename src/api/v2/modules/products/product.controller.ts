@@ -67,6 +67,29 @@ export const getProducts = asyncHandler(async (req: Request, res: Response) => {
     );
 });
 
+// ============ GET ALL PRODUCTS ============
+export const getProductsForSale = asyncHandler(async (req: Request, res: Response) => {
+    const authUser = getAuthUser(req);
+
+    // 1. Validate query params
+    const parsedParams = listProductsSchema.safeParse({
+        categoryId: req.query.categoryId,
+        search: req.query.search,
+        lowStockThreshold: req.query.lowStockThreshold,
+    });
+    console.log("Parsed query params:", parsedParams, req.query);
+    if (!parsedParams.success) {
+        throw new ApiError(400, 'Invalid query parameters');
+    }
+
+    // 2. Call service with auth user
+    const result = await productService.getProducts(parsedParams.data, authUser.id);
+
+    // 3. Return response
+    res.status(200).json(
+        new ApiResponse('Products retrieved successfully', result)
+    );
+});
 
 // ============ GET PRODUCT BY ID ============
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {

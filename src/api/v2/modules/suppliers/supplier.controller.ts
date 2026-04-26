@@ -65,8 +65,8 @@ export const getSuppliers = asyncHandler(async (req: Request, res: Response) => 
     // 1. Validate query params
     const parsedParams = listSuppliersSchema.safeParse({
         search: req.query.search,
-        page: req.query.page ? parseInt(req.query.page as string) : 1,
-        limit: req.query.limit ? parseInt(req.query.limit as string) : 20,
+        page: req.query.page ? parseInt(req.query.page as string) : undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
         sortBy: req.query.sortBy,
         sortOrder: req.query.sortOrder,
     });

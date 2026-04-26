@@ -1,6 +1,6 @@
 // src/api/v1/modules/supplier-payment/supplier-payment.routes.ts
 import { Router } from 'express';
-// import { verifyAuth } from '@/middleware/auth'; // ← Auth middleware
+import { authMiddleware } from '@/middlewares/auth.middelware.js'; // ← Auth middleware
 import * as supplierPaymentController from './supplier-payment.controller.js';
 
 const router = Router();
@@ -14,16 +14,16 @@ const router = Router();
 
 // ============ AUTH MIDDLEWARE ============
 // All supplier payment routes require authentication
-// router.use(verifyAuth);
+router.use(authMiddleware);
 
 // ============ SUPPLIER PAYMENT ROUTES ============
 
 // POST /api/v1/supplier-payments - Create new supplier payment
-router.post('/', supplierPaymentController.createSupplierPayment);
+router.post('/', supplierPaymentController.createSupplierPayment);//checked and implemented
 
 // GET /api/v1/supplier-payments - Get all supplier payments with filters
 // Query params: ?supplierId=, ?paymentMode=, ?search=, ?startDate=, ?endDate=, ?page=1, ?limit=30, ?sortBy=, ?sortOrder=
-router.get('/', supplierPaymentController.getSupplierPayments);
+router.get('/', supplierPaymentController.getSupplierPayments);//checked and implemented
 
 // GET /api/v1/supplier-payments/summary/daily - Get daily payment summary
 // Query params: ?days=30
@@ -43,7 +43,7 @@ router.get('/:id', supplierPaymentController.getSupplierPaymentById);
 router.put('/:id', supplierPaymentController.updateSupplierPayment);
 
 // DELETE /api/v1/supplier-payments/:id - Delete supplier payment
-router.delete('/:id', supplierPaymentController.deleteSupplierPayment);
+router.delete('/:id', supplierPaymentController.deleteSupplierPayment);//checked and implemented
 
 // GET /api/v1/supplier-payments/supplier/:supplierId - Get payments for a specific supplier
 router.get('/supplier/:supplierId', supplierPaymentController.getSupplierPaymentsBySupplier);

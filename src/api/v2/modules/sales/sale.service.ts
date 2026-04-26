@@ -80,7 +80,7 @@ export class SaleService {
         // ── Pre-flight: all products exist ───────────────────────────────────────
         const productIds = [...new Set(lines.map((l) => l.productId))];
         const products = await PrismaClient.product.findMany({
-            where: { id: { in: productIds } },
+            where: { id: { in: productIds }, createdById: authUser.id },
             select: { id: true, name: true },
         });
 
@@ -232,6 +232,7 @@ export class SaleService {
                 totalPages: Math.ceil(total / limit),
             },
             summary: {
+                totalSales: total,
                 totalSpend,
                 totalLineItems,
             }

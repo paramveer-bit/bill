@@ -16,11 +16,11 @@ const router = Router();
 router.use(authMiddleware);
 
 // POST   /api/v1/sales             — Create sale (FIFO allocation)
-router.post('/', saleController.createSale);
+router.post('/', saleController.createSale);//checked and implemented
 
 // GET    /api/v1/sales             — List sales (filters, pagination, sorting)
 // Query: ?search= &dateFilter= &startDate= &endDate= &customerId= &sortBy= &sortOrder= &page= &limit=
-router.get('/', saleController.getSales);
+router.get('/', saleController.getSales);//checked and implemented
 
 // GET    /api/v1/sales/summary     — Today / month / all-time totals
 router.get('/summary', saleController.getSalesSummary);
@@ -29,6 +29,6 @@ router.get('/summary', saleController.getSalesSummary);
 router.get('/:id', saleController.getSaleById);
 
 // DELETE /api/v1/sales/:id         — Reverse FIFO stock + customer balance
-router.delete('/:id', saleController.deleteSale);
+router.delete('/:id', saleController.deleteSale);//checked and implemented
 
 export default router;

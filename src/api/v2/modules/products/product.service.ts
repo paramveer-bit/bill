@@ -107,6 +107,8 @@ export class ProductService {
         };
     }
 
+
+
     // ============ GET PRODUCT BY ID ============used
     async getProductById(id: string, authUser: AuthUser): Promise<ProductWithStock> {
         // Business logic: Validate ID

@@ -123,6 +123,8 @@ export class ProductRepository {
         });
     }
 
+
+
     // ============ COUNT ============
     static async count(filters: {
         categoryId?: string;
@@ -262,23 +264,11 @@ export class ProductRepository {
     static async getStockInfo(productId: string): Promise<{
         totalStockPcs: number;
     } | null> {
-        const product = await PrismaClient.product.findUnique({
-            where: { id: productId },
-            include: {
-                purchaseBatches: {
-                    where: { qtyRemaining: { gt: 0 } },
-                    select: { qtyRemaining: true },
-                },
-            },
+        const batches = await PrismaClient.purchaseBatch.aggregate({
+            where: { productId, qtyRemaining: { gt: 0 } },
+            _sum: { qtyRemaining: true },
         });
-
-        if (!product) return null;
-
-        const totalStockPcs = product.purchaseBatches.reduce(
-            (sum, batch) => sum + batch.qtyRemaining,
-            0
-        );
-
+        const totalStockPcs = batches._sum.qtyRemaining ?? 0;
         return { totalStockPcs };
     }
 

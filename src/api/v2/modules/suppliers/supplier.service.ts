@@ -41,7 +41,7 @@ export class SupplierService {
     // ============ GET ALL SUPPLIERS ============
     async getSuppliers(params: ListSuppliersInput, authUser: AuthUser): Promise<any> {
         const { search, page, limit, sortBy, sortOrder } = params;
-        const skip = (page - 1) * limit;
+        const skip = (!page || !limit) ? undefined : (page - 1) * limit;
 
         // Get suppliers in parallel
         const [suppliers, total] = await Promise.all([
@@ -59,7 +59,7 @@ export class SupplierService {
             }),
         ]);
 
-        const totalPages = Math.ceil(total / limit);
+        const totalPages = limit ? Math.ceil(total / limit) : 1;
 
         return {
             data: suppliers,

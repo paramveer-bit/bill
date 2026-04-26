@@ -48,8 +48,8 @@ export const updateSupplierSchema = supplierBaseSchema.partial();
 // ============ LIST/FILTER SCHEMA ============
 export const listSuppliersSchema = z.object({
     search: z.string().optional(),
-    page: z.coerce.number().min(1).default(1),
-    limit: z.coerce.number().min(1).max(100).default(20),
+    page: z.coerce.number().min(1).optional(),
+    limit: z.coerce.number().min(1).max(100).optional(),
     sortBy: z.string().default('createdAt'),
     sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });
