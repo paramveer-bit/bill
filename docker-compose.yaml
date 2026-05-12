@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend:
+    image: "paramveer01/bill:latest"
+    container_name: bill
+    ports:
+      - "8000:8000"
+    environment:
+      # These variables must match what you export in the script
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: ${PORT}
+      JWT_SECRET: ${JWT_SECRET}
+      NODE_ENV: "development"
+      REFRESH_TOKEN_EXPIRY: ${REFRESH_TOKEN_EXPIRY}
+      ACCESS_TOKEN_EXPIRY: ${ACCESS_TOKEN_EXPIRY}
+      OTP_EXPIRY: ${OTP_EXPIRY}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS}
+      OTP_REQUEST_LIMIT: ${OTP_REQUEST_LIMIT}

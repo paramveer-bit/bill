@@ -1,0 +1,65 @@
+name: Build and Deploy to Docker Hub
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: paramveer01/bill:latest
+
+      - name: Verify Pushed Image
+        run: docker pull paramveer01/bill:latest
+      # deploying to ec2 instance
+
+      - name: Copy docker-compose.yaml to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "docker-compose.yaml" # The file in your GitHub repo
+          target: "~/my-app-folder"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            # 1. Navigate to your app directory (change this to your actual path)
+            mkdir -p ~/my-app-folder
+            cd ~/my-app-folder
+
+            # 2. Create/Overwrite the .env file with current secrets
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "PORT=${{ secrets.PORT }}" >> .env
+            echo "REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}" >> .env
+            echo "ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}" >> .env
+            echo "OTP_EXPIRY=${{ secrets.OTP_EXPIRY }}" >> .env
+            echo "OTP_MAX_ATTEMPTS=${{ secrets.OTP_MAX_ATTEMPTS }}" >> .env
+            echo "OTP_REQUEST_LIMIT=${{ secrets.OTP_REQUEST_LIMIT }}" >> .env
+
+            sudo docker compose pull
+            # 4. Restart the services
+            # --remove-orphans cleans up old containers
+            sudo docker compose up -d --remove-orphans

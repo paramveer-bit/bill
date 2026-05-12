@@ -28,7 +28,6 @@ import { generateSecureToken, generateOtp, sendOtpEmail, generateAccessToken, ge
 // Environment Variables
 // ============================================
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 const REFRESH_TOKEN_EXPIRY = parseInt(process.env.REFRESH_TOKEN_EXPIRY || '2592000000'); // 30 days
 const ACCESS_TOKEN_EXPIRY = parseInt(process.env.ACCESS_TOKEN_EXPIRY || '900000');       // 15 minutes
 const OTP_EXPIRY = parseInt(process.env.OTP_EXPIRY || '900000');                         // 15 minutes
