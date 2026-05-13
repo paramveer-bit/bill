@@ -1,19 +1,19 @@
-node_modules
-npm-debug.log
-dist
-.git
-.gitignore
-README.md
-.env
-.env.local
-.env.*.local
-.vscode
-.DS_Store
-*.log
-.npm
-.eslintcache
-build
-coverage
-*.bak
-.next
-out
+# node_modules
+# npm-debug.log
+# dist
+# .git
+# .gitignore
+# README.md
+# .env
+# .env.local
+# .env.*.local
+# .vscode
+# .DS_Store
+# *.log
+# .npm
+# # .eslintcache
+# build
+# coverage
+# *.bak
+# .next
+# out
