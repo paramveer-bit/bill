@@ -6,8 +6,9 @@ dotenv.config({
     path: './env'
 });
 
-const server = app.listen(process.env.PORT || 5000, () => {
-    console.log(`Server started on http://localhost:${process.env.PORT}`);
+const PORT = parseInt(process.env.PORT || '5000', 10);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server started on http://localhost:${PORT}`);
 })
 
 process.on("SIGINT", async () => {
