@@ -5,11 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -r dotenv/config --experimental-json-modules dist/index.js",
-    "build": "tsc -b",
-    "start": "nodemon -r dotenv/config --experimental-json-modules dist/index.js"
+    "dev": "tsc -b && tsc-alias && node ./dist/index.js",
+    "build": "tsc -b && tsc-alias",
+    "start": "tsc -b && tsc-alias && node ./dist/index.js"
   },
-  "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
@@ -24,6 +23,7 @@
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "nodemailer": "^8.0.5",
+    "nodemon": "^3.1.14",
     "zod": "^4.1.13"
   },
   "devDependencies": {
