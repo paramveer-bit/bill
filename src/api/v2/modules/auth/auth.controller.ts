@@ -70,7 +70,8 @@ export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
     res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
+        domain: '.paramveer.in',         // <-- THE FIX: Note the leading dot
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
@@ -130,7 +131,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
+        domain: '.paramveer.in',         // <-- THE FIX: Note the leading dot
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 
@@ -167,7 +169,8 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
     res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        sameSite: 'lax',
+        domain: '.paramveer.in',         // <-- THE FIX: Note the leading dot
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     });
 

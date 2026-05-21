@@ -51,7 +51,7 @@ jobs:
             cd ~/my-app-folder
 
             # 2. Create/Overwrite the .env file with current secrets
-            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
             echo "PORT=${{ secrets.PORT }}" >> .env
             echo "REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}" >> .env
             echo "ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}" >> .env
