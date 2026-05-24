@@ -14,8 +14,8 @@ const app = express()
 app.use(cookieParser())
 
 app.use(cors({
-    // origin: 'https://front.paramveer.in',
-    origin: true, // Allow all origins - adjust in production
+    origin: 'https://front.paramveer.in',
+    // origin: true, // Allow all origins - adjust in production
     credentials: true,
 }))
 
