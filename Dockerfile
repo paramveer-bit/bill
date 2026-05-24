@@ -6,23 +6,24 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-COPY prisma ./prisma
-COPY tsconfig.json ./
 
 # Install dependencies (including dev dependencies for building)
 RUN npm ci
 
-RUN npx prisma generate
+# Copy Prisma schema
+COPY prisma ./prisma
 
 # Copy source code
 COPY src ./src
 
+RUN npx prisma generate
 
+COPY tsconfig.json ./
 # COPY prisma.config.ts ./
 
 
 # Build the application
-RUN npm run build
+# RUN npm run build
 
 # Run tsc-alias to replace path aliases with relative paths and fix file extensions for ESM
 # RUN npx tsc-alias -p tsconfig.json --extname .js
@@ -63,4 +64,4 @@ RUN npm run build
 # EXPOSE 8000
 
 # Start the application
-CMD ["node", "dist/index.js"]
+CMD ["npm", "start"]

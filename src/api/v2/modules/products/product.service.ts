@@ -23,7 +23,7 @@ import type { AuthUser } from '../auth.schema.js';
 export class ProductService {
 
     // ============ CREATE PRODUCT ============
-    async createProduct(data: CreateProductInput, authUser: AuthUser): Promise<any> {
+    async createProduct(data: CreateProductInput, authUser: AuthUser, sellingPrice: any): Promise<any> {
         // Business logic: Validate category if provided
         if (data.categoryId) {
             // TODO: Verify category belongs to user
@@ -35,7 +35,7 @@ export class ProductService {
 
         // Business logic: Ensure base unit is included in conversions
         const allConversions = [
-            { unitName: data.baseUnit, conversionQty: 1 },
+            { unitName: data.baseUnit, conversionQty: 1, sellingPrice: sellingPrice }, // Ensure base unit is always included
             ...(data.unitConversions?.filter((u) => u.unitName !== data.baseUnit) ?? []),
         ];
 
@@ -175,14 +175,14 @@ export class ProductService {
         let conversions: UnitConversion[] | undefined;
         if (unitConversions && data.baseUnit) {
             conversions = [
-                { unitName: data.baseUnit, conversionQty: 1 },
+                { unitName: data.baseUnit, conversionQty: 1, sellingPrice: data.currentSellPrice || null }, // Ensure base unit is included
                 ...unitConversions.filter((u) => u.unitName !== data.baseUnit),
             ];
         } else if (unitConversions) {
             conversions = unitConversions;
         }
 
-        // Clean the data object: remove undefined values
+        // Business logic: Clean the data object: remove undefined values
         const updatePayload: Parameters<typeof ProductRepository.update>[1] = {};
 
         Object.entries(restData).forEach(([key, value]) => {

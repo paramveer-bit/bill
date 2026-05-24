@@ -12,6 +12,11 @@ export const unitConversionSchema = z.object({
     conversionQty: z.number()
         .int("Conversion quantity must be an integer")
         .positive("Conversion quantity must be a positive integer"),
+
+    sellingPrice: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Selling price cannot be negative")
+        .nullable(),
 });
 
 // ============ BASE SCHEMA ============
@@ -44,6 +49,8 @@ export const productBaseSchema = z.object({
     categoryId: z.string()
         .optional()
         .nullable(),
+
+
 });
 
 // ============ CREATE SCHEMA ============

@@ -145,6 +145,7 @@ model UnitConversion {
   product       Product  @relation(fields: [productId], references: [id])
   productId     String
   unitName      String
+  sellingPrice  Decimal? @db.Decimal(12, 2) // Standard price for this specific packaging unit
   conversionQty Int
   createdAt     DateTime @default(now())
 

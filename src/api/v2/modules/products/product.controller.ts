@@ -33,7 +33,7 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
     }
 
     // 2. Call service with auth user
-    const product = await productService.createProduct(parsedData.data, authUser);
+    const product = await productService.createProduct(parsedData.data, authUser, parsedData.data.currentSellPrice);
 
     // 3. Return response
     res.status(201).json(
