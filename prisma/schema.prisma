@@ -152,6 +152,7 @@ model UnitConversion {
   @@unique([productId, unitName])
 }
 
+// 
 model Category {
   id          String     @id @default(uuid())
   name        String     @unique
