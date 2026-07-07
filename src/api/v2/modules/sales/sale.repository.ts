@@ -337,4 +337,22 @@ export class SaleRepository {
         });
         return count > 0;
     }
+
+    // ============ GET LAST SALES BATCH FOR PRODUCT ============ used
+    static async getLastSalesBatchForProduct(productId: string, createdById: string, customerId: string): Promise<any> {
+
+        const batch = await PrismaClient.saleLine.findFirst({
+            where: { productId, sale: { customerId } },
+            orderBy: { createdAt: 'desc' },
+            include: {
+                product: {
+                    include: {
+                        unitConversions: true
+                    }
+                }
+            },
+        }
+        );
+        return batch;
+    }
 }

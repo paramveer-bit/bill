@@ -25,6 +25,9 @@ router.get('/', saleController.getSales);//checked and implemented
 // GET    /api/v1/sales/summary     — Today / month / all-time totals
 router.get('/summary', saleController.getSalesSummary);
 
+router.get('/search-products', saleController.searchProductsByCustomerIdAndRecentSales);
+
+
 // GET    /api/v1/sales/:id         — Full sale detail with line items
 router.get('/:id', saleController.getSaleById);
 

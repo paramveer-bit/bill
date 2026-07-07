@@ -12,6 +12,8 @@ import type {
 } from './sale.schema.js';
 import type { AuthUser } from '../auth.schema.js';
 import { Decimal } from '@/lib/generated/prisma/internal/prismaNamespaceBrowser.js';
+import { ProductRepository } from '../products/product.repository.js';
+
 /**
  * Service layer — all business logic lives here.
  * Calls repository for data access.
@@ -272,5 +274,18 @@ export class SaleService {
         }
 
         await SaleRepository.delete(sale);
+    }
+
+    async searchProductsByCustomerIdAndRecentSales(customerId: string, productId: string, authUser: AuthUser) {
+        const product = ProductRepository.isOwnedBy(productId, authUser.id);
+        if (!product) {
+            throw new ApiError(403, 'You do not have access to this product');
+        }
+        const res = SaleRepository.getLastSalesBatchForProduct(productId, authUser.id, customerId);
+        if (!res) {
+            return null;
+        }
+        return res;
+
     }
 }
