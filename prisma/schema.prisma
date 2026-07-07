@@ -215,17 +215,22 @@ model Purchase {
 }
 
 model PurchaseBatch {
-  id           String    @id @default(uuid())
-  product      Product   @relation(fields: [productId], references: [id])
-  productId    String
-  purchase     Purchase? @relation(fields: [purchaseId], references: [id])
-  purchaseId   String?
+  id         String    @id @default(uuid())
+  product    Product   @relation(fields: [productId], references: [id])
+  productId  String
+  purchase   Purchase? @relation(fields: [purchaseId], references: [id])
+  purchaseId String?
+
+  // ADD THESE TWO FIELDS TO TRACK UNIT CONTEXT:
+  purchasedUnit String @default("pcs") // Stores "Case", "Box", etc.
+  conversionQty Int    @default(1) // Stores the multiplier at the time of purchase
+
   qtyReceived  Int
   qtyRemaining Int
-  unitCost     Decimal   @db.Decimal(12, 2)
-  receivedAt   DateTime  @default(now())
-  sellingPrice Decimal?  @db.Decimal(12, 2)
-  mrp          Decimal   @db.Decimal(12, 2)
+  unitCost     Decimal  @db.Decimal(12, 2)
+  receivedAt   DateTime @default(now())
+  sellingPrice Decimal? @db.Decimal(12, 2)
+  mrp          Decimal  @db.Decimal(12, 2)
 
   saleAllocations SaleBatchAllocation[]
 }

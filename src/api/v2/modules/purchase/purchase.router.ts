@@ -19,10 +19,14 @@ router.post('/', purchaseController.createPurchase);//checked and implemented
 // Query: ?supplierId= &invoiceNo= &search= &startDate= &endDate= &dateFilter= &page= &limit=
 router.get('/', purchaseController.getPurchases);//checked and implemented
 
+// products detail from last purchase
+router.get('/search-products', purchaseController.searchProductsBySellerIdAndRecentPurchases);
+
 // GET    /api/v1/purchases/:id      — Get full purchase detail by ID
 router.get('/:id', purchaseController.getPurchaseById);
 
 // DELETE /api/v1/purchases/:id      — Delete purchase (blocked if items are sold)
 router.delete('/:id', purchaseController.deletePurchase);
+
 
 export default router;

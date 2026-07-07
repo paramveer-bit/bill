@@ -19,7 +19,7 @@ export type Customer = z.infer<typeof customerSchema>;
 
 
 // ============ CREATE SCHEMA ============
-export const createCustomerSchema = customerSchema.omit({ id: true, createdAt: true, balance: true }).extend({
+export const createCustomerSchema = customerSchema.omit({ id: true, createdAt: true }).extend({
     name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
     email: z.string().email("Invalid email address"),
     phone: z.string().regex(/^\+?[0-9]{10,15}$/, "Invalid phone number"),

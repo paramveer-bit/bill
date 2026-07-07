@@ -19,14 +19,13 @@ const customerService = new CustomerService();
 export const createCustomer = asyncHandler(async (req: Request, res: Response) => {
     //Get auth user 
     const authUser = getAuthUser(req);
-
+    console.log("Auth User:", req.body);
 
     // 1. Validate input
     const parsedData = createCustomerSchema.safeParse(req.body);
     if (!parsedData.success) {
         throw new ApiError(400, 'Validation Error', parsedData.error.issues);
     }
-
     // 2. Call service
     const customer = await customerService.createCustomer(parsedData.data, authUser);
 

@@ -88,3 +88,24 @@ export const deletePurchase = asyncHandler(async (req: Request, res: Response) =
 
     res.status(200).json(new ApiResponse('Purchase deleted successfully', null));
 });
+
+// ============ Search productsn by sellerId and recentpurchases ============
+export const searchProductsBySellerIdAndRecentPurchases = asyncHandler(async (req: Request, res: Response) => {
+    const authUser = getAuthUser(req);
+    const { sellerId } = req.query;
+    if (!sellerId || typeof sellerId !== 'string') {
+        throw new ApiError(400, "Seller ID is required and must be a string");
+    }
+    const { productId } = req.query;
+    if (!productId || typeof productId !== 'string') {
+        throw new ApiError(400, "Product ID is required and must be a string");
+    }
+
+    console.log('Received search request with sellerId:', sellerId, 'and productId:', productId);
+    const products = await purchaseService.searchProductsBySellerIdAndRecentPurchases(sellerId, productId, authUser);
+    if (!products) {
+        res.status(404).json(new ApiResponse('No recent purchases found for this product and seller', null));
+        return;
+    }
+    return res.status(200).json(new ApiResponse('Recent purchases fetched successfully', products));
+})

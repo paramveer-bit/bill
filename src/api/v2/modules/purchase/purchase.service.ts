@@ -10,6 +10,8 @@ import type {
     PurchaseListMeta,
 } from './purchase.schema.js';
 import type { AuthUser } from '../auth.schema.js';
+import { ProductRepository } from '../products/product.repository.js';
+
 /**
  * Service layer — all business logic lives here.
  * Calls repository for data access.
@@ -54,6 +56,7 @@ function getDateRange(filter: string): { gte?: Date; lte?: Date } | undefined {
             return undefined;
     }
 }
+
 
 export class PurchaseService {
 
@@ -250,7 +253,22 @@ export class PurchaseService {
                 'Cannot delete: one or more items in this purchase have already been sold'
             );
         }
+        // walso delte purchase batch record
+
 
         await PurchaseRepository.delete(id);
+    }
+
+    async searchProductsBySellerIdAndRecentPurchases(sellerId: string, productId: string, authUser: AuthUser) {
+        const product = ProductRepository.isOwnedBy(productId, authUser.id);
+        if (!product) {
+            throw new ApiError(403, 'You do not have access to this product');
+        }
+        const res = PurchaseRepository.getLastPurchaseBatchForProduct(productId, authUser.id, sellerId);
+        if (!res) {
+            return null;
+        }
+        return res;
+
     }
 }

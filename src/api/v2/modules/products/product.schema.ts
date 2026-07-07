@@ -109,6 +109,7 @@ export type ProductWithRelations = Product & {
     purchaseBatches?: Array<{
         qtyRemaining: number;
     }>;
+    createdById: string;
 };
 
 export type ProductWithStock = ProductWithRelations & {

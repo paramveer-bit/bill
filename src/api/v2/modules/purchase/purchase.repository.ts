@@ -61,6 +61,8 @@ export class PurchaseRepository {
                             unitCost: new Decimal(batch.unitCost),
                             sellingPrice: new Decimal(batch.sellingPrice),
                             mrp: new Decimal(batch.mrp),
+                            purchasedUnit: batch.purchasedUnit,
+                            conversionQty: batch.conversionQty,
                         })),
                     },
                 },
@@ -200,7 +202,38 @@ export class PurchaseRepository {
 
     // ============ DELETE ============ used
     static async delete(id: string): Promise<void> {
-        await PrismaClient.purchase.delete({ where: { id } });
+        PrismaClient.$transaction(async (tx) => {
+            // 1. Get purchase with batches and supplierId (for balance update)
+            const purchase = await tx.purchase.findUnique({
+                where: { id },
+                select: {
+                    totalAmount: true,
+                    supplierId: true,
+                    batches: { select: { id: true } },
+                },
+            });
+
+            if (!purchase) {
+                throw new Error('Purchase not found');
+            }
+
+            // 2. Update supplier balance — decrement by totalAmount (we owe less)
+            await tx.supplier.update({
+                where: { id: purchase.supplierId },
+                data: { balance: { decrement: new Decimal(purchase.totalAmount) } }
+            });
+
+            await tx.purchaseBatch.deleteMany({
+                where: { purchaseId: id },
+            });
+
+            // 3. Delete the purchase itself
+            await tx.purchase.delete({
+                where: { id },
+            });
+        });
+
+
     }
 
     // ============ VERIFY SUPPLIER OWNERSHIP ============ used
@@ -209,5 +242,19 @@ export class PurchaseRepository {
             where: { id: supplierId, createdById: userId },
         });
         return count > 0;
+    }
+
+    // 
+    static async getLastPurchaseBatchForProduct(productId: string, createdById: string, supplierId: string): Promise<any> {
+
+        const batch = await PrismaClient.purchaseBatch.findFirst({
+            where: { productId, purchase: { supplierId } },
+            orderBy: { receivedAt: 'desc' },
+            include: {
+                product: true
+            },
+        }
+        );
+        return batch;
     }
 }

@@ -15,7 +15,9 @@ export const purchaseBatchSchema = z.object({
         .refine((val) => val.gte(0), "Sell price cannot be negative"),
     mrp: z.union([z.string(), z.number()])
         .transform((val) => new Decimal(val))
-        .refine((val) => val.gte(0), "Sell price cannot be negative")
+        .refine((val) => val.gte(0), "Sell price cannot be negative"),
+    conversionQty: z.number().int().positive('Conversion quantity must be a positive integer'),
+    purchasedUnit: z.string().min(1, 'Purchased unit is required'),
 });
 
 // ============ CREATE SCHEMA ============
@@ -85,6 +87,8 @@ export type PurchaseBatchWithProduct = {
     receivedAt: Date;
     sellingPrice: decimal | null;
     mrp: decimal;
+    conversionQty: number;
+    purchasedUnit: string;
     product?: {
         id: string;
         name: string;
