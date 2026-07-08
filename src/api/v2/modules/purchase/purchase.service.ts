@@ -99,7 +99,7 @@ export class PurchaseService {
             0
         );
         calculatedTotal = parseFloat(calculatedTotal.toFixed(2)) + (data.coinAdjustment ? parseFloat(data.coinAdjustment.toFixed(2)) : 0);
-        if (calculatedTotal !== data.totalAmount.toNumber()) {
+        if (calculatedTotal !== parseFloat(data.totalAmount.toFixed(2))) {
             throw new ApiError(400,
                 `Total amount mismatch: expected ${calculatedTotal}, got ${data.totalAmount}`
             );
