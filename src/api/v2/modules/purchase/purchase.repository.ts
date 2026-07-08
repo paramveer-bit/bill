@@ -16,6 +16,8 @@ import type {
 const purchaseFullInclude = {
     supplier: true,
     batches: {
+        // order batches by related product name
+        orderBy: { product: { name: 'asc' } },
         include: {
             product: { select: { id: true, name: true, sku: true, baseUnit: true } },
         },
@@ -173,6 +175,7 @@ export class PurchaseRepository {
         return PrismaClient.purchase.findUnique({
             where: { id, createdById },
             include: purchaseFullInclude,
+
         }) as Promise<PurchaseWithRelations | null>;
     }
 
