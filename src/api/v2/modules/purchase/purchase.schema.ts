@@ -40,6 +40,9 @@ export const createPurchaseSchema = z.object({
     batches: z
         .array(purchaseBatchSchema)
         .min(1, 'At least one batch is required'),
+
+    coinAdjustment: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
 });
 
 // ============ LIST / FILTER SCHEMA ============

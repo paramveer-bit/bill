@@ -94,10 +94,11 @@ export class PurchaseService {
         }
 
         // ── Pre-flight: totalAmount matches calculated sum ───────────────────────
-        const calculatedTotal = data.batches.reduce(
+        let calculatedTotal = data.batches.reduce(
             (sum, b) => sum + b.qtyReceived * b.unitCost?.toNumber(),
             0
         );
+        calculatedTotal = parseFloat(calculatedTotal.toFixed(2)) + (data.coinAdjustment ? parseFloat(data.coinAdjustment.toFixed(2)) : 0);
         if (calculatedTotal !== data.totalAmount.toNumber()) {
             throw new ApiError(400,
                 `Total amount mismatch: expected ${calculatedTotal}, got ${data.totalAmount}`

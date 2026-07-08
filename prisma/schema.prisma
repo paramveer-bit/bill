@@ -201,17 +201,17 @@ model Customer {
 }
 
 model Purchase {
-  id           String   @id @default(uuid())
-  supplier     Supplier @relation(fields: [supplierId], references: [id])
-  supplierId   String
-  invoiceNo    String?
-  purchaseDate DateTime
-  totalAmount  Decimal  @db.Decimal(12, 2)
-  createdAt    DateTime @default(now())
-  createdBy    user     @relation(fields: [createdById], references: [id])
-  createdById  String
-
-  batches PurchaseBatch[]
+  id             String          @id @default(uuid())
+  supplier       Supplier        @relation(fields: [supplierId], references: [id])
+  supplierId     String
+  invoiceNo      String?
+  purchaseDate   DateTime
+  totalAmount    Decimal         @db.Decimal(12, 2)
+  createdAt      DateTime        @default(now())
+  createdBy      user            @relation(fields: [createdById], references: [id])
+  createdById    String
+  coinAdjustment Decimal         @default(0.00) @db.Decimal(12, 2)
+  batches        PurchaseBatch[]
 }
 
 model PurchaseBatch {
