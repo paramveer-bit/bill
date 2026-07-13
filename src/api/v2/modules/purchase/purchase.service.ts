@@ -99,9 +99,11 @@ export class PurchaseService {
             0
         );
         calculatedTotal = parseFloat(calculatedTotal.toFixed(2)) + (data.coinAdjustment ? parseFloat(data.coinAdjustment.toFixed(2)) : 0);
-        if (calculatedTotal !== parseFloat(data.totalAmount.toFixed(2))) {
+        const roundedCalculated = Math.round(calculatedTotal * 100) / 100;
+        const roundedProvided = Math.round(parseFloat(data.totalAmount.toFixed(2)) * 100) / 100;
+        if (Math.abs(roundedCalculated - roundedProvided) > 0.01) {
             throw new ApiError(400,
-                `Total amount mismatch: expected ${calculatedTotal}, got ${data.totalAmount}`
+                `Total amount mismatch: expected ${roundedCalculated}, got ${roundedProvided}`
             );
         }
 
