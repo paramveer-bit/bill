@@ -212,6 +212,7 @@ model Purchase {
   createdById    String
   coinAdjustment Decimal         @default(0.00) @db.Decimal(12, 2)
   batches        PurchaseBatch[]
+  receivedAt     DateTime?       @default(now())
 }
 
 model PurchaseBatch {
@@ -222,8 +223,9 @@ model PurchaseBatch {
   purchaseId String?
 
   // ADD THESE TWO FIELDS TO TRACK UNIT CONTEXT:
-  purchasedUnit String @default("pcs") // Stores "Case", "Box", etc.
-  conversionQty Int    @default(1) // Stores the multiplier at the time of purchase
+  purchasedUnit    String  @default("pcs") // Stores "Case", "Box", etc.
+  conversionQty    Int     @default(1) // Stores the multiplier at the time of purchase
+  purchaseUnitCost Decimal @default(0) @db.Decimal(12, 2) // Cost per purchased unit
 
   qtyReceived  Int
   qtyRemaining Int

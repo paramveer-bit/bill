@@ -42,7 +42,7 @@ export class PurchaseRepository {
         data: CreatePurchaseInput & { createdById: string },
         existingProducts: Array<{ id: string; name: string; currentSellPrice: any }>
     ): Promise<PurchaseWithRelations> {
-        const { supplierId, invoiceNo, purchaseDate, totalAmount, batches, createdById, coinAdjustment } = data;
+        const { supplierId, invoiceNo, purchaseDate, totalAmount, batches, createdById, coinAdjustment, receivedAt } = data;
         const effectiveDate = purchaseDate ?? new Date();
 
         return PrismaClient.$transaction(async (tx) => {
@@ -55,6 +55,7 @@ export class PurchaseRepository {
                     totalAmount,
                     coinAdjustment: coinAdjustment ?? null,
                     createdById,
+                    receivedAt: receivedAt ?? effectiveDate,
                     batches: {
                         create: batches.map((batch) => ({
                             productId: batch.productId,
@@ -66,6 +67,7 @@ export class PurchaseRepository {
                             mrp: new Decimal(batch.mrp),
                             purchasedUnit: batch.purchasedUnit,
                             conversionQty: batch.conversionQty,
+                            purchaseUnitCost: new Decimal(batch.purchaseUnitCost),
                         })),
                     },
                 },

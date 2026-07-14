@@ -18,6 +18,9 @@ export const purchaseBatchSchema = z.object({
         .refine((val) => val.gte(0), "Sell price cannot be negative"),
     conversionQty: z.number().int().positive('Conversion quantity must be a positive integer'),
     purchasedUnit: z.string().min(1, 'Purchased unit is required'),
+    purchaseUnitCost: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Purchase unit cost cannot be negative"),
 });
 
 // ============ CREATE SCHEMA ============
@@ -42,7 +45,10 @@ export const createPurchaseSchema = z.object({
         .min(1, 'At least one batch is required'),
 
     coinAdjustment: z.union([z.string(), z.number()])
-        .transform((val) => new Decimal(val))
+        .transform((val) => new Decimal(val)),
+
+    receivedAt: z.string().datetime().optional().nullable()
+
 });
 
 // ============ LIST / FILTER SCHEMA ============
