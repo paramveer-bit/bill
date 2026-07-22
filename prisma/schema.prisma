@@ -237,6 +237,7 @@ model PurchaseBatch {
   saleAllocations SaleBatchAllocation[]
 }
 
+// njknkn
 model Sale {
   id              String    @id @default(uuid())
   invoiceNo       String    @unique
