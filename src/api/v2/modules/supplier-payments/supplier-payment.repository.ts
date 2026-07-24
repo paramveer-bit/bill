@@ -5,7 +5,9 @@ import type {
     CreateSupplierPaymentInput,
     SupplierPayment,
     SupplierPaymentWithRelations,
-    UpdateSupplierPaymentInput
+    UpdateSupplierPaymentInput,
+    LedgerAggregates,
+    LedgerRawTransactions
 } from './supplier-payment.schema.js';
 
 /**
@@ -318,5 +320,47 @@ export class SupplierPaymentRepository {
             },
         });
         return count > 0;
+    }
+
+    // ============ LEDGER: AGGREGATES BEFORE A DATE (Balance B/F) ============
+    static async getLedgerAggregatesBefore(
+        supplierId: string,
+        before: Date
+    ): Promise<LedgerAggregates> {
+        const [prevPurchases, prevPayments] = await Promise.all([
+            PrismaClient.purchase.aggregate({
+                _sum: { totalAmount: true },
+                where: { supplierId, purchaseDate: { lt: before } },
+            }),
+            PrismaClient.supplierPayment.aggregate({
+                _sum: { amount: true },
+                where: { supplierId, paymentDate: { lt: before } },
+            }),
+        ]);
+
+        return {
+            purchases: Number(prevPurchases._sum.totalAmount) || 0,
+            payments: Number(prevPayments._sum.amount) || 0,
+        };
+    }
+
+    // ============ LEDGER: TRANSACTIONS IN DATE RANGE ============
+    static async getLedgerTransactionsInRange(
+        supplierId: string,
+        start: Date,
+        end: Date
+    ): Promise<LedgerRawTransactions> {
+        const [purchases, payments] = await Promise.all([
+            PrismaClient.purchase.findMany({
+                where: { supplierId, purchaseDate: { gte: start, lte: end } },
+                orderBy: { purchaseDate: 'asc' },
+            }),
+            PrismaClient.supplierPayment.findMany({
+                where: { supplierId, paymentDate: { gte: start, lte: end } },
+                orderBy: { paymentDate: 'asc' },
+            }),
+        ]);
+
+        return { purchases, payments };
     }
 }

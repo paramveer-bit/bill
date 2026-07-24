@@ -168,6 +168,33 @@ export const getSupplierPaymentsBySupplier = asyncHandler(async (req: Request, r
     );
 });
 
+//  ====================== Supplier Ledger and Balance Summary Endpoints ======================
+// ============ GET SUPPLIER LEDGER ============
+
+export const getSupplierLedger = asyncHandler(async (req: Request, res: Response) => {
+    const authUser = getAuthUser(req);
+    const { id } = req.params;
+
+    if (!id) {
+        throw new ApiError(400, 'Supplier ID is required');
+    }
+
+    const ledger = await supplierPaymentService.getSupplierLedger(
+        id,
+        {
+            startDate: req.query.startDate as string,
+            endDate: req.query.endDate as string,
+            page: req.query.page as string,
+            limit: req.query.limit as string,
+        },
+        authUser
+    );
+
+    res.status(200).json(
+        new ApiResponse('Supplier ledger retrieved successfully', ledger)
+    );
+});
+
 // ============ GET DAILY PAYMENT SUMMARY ============
 // export const getDailyPaymentSummary = asyncHandler(async (req: Request, res: Response) => {
 //     const authUser = getAuthUser(req);

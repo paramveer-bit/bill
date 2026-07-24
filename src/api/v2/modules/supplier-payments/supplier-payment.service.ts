@@ -1,6 +1,8 @@
 // src/api/v1/modules/supplier-payment/supplier-payment.service.ts
 import { SupplierPaymentRepository } from './supplier-payment.repository.js';
 import ApiError from '@/helpers/ApiError.js';
+import { SupplierRepository } from '../suppliers/supplier.repository.js';
+
 import type {
     CreateSupplierPaymentInput,
     UpdateSupplierPaymentInput,
@@ -19,6 +21,52 @@ import { validPaymentModes } from "../constants.js"
  * ⚠️ NOTE: All methods receive AuthUser (from middleware)
  * This ensures data isolation per user
  */
+
+// ── Date range helper ─────────────────────────────────────────────────────────
+function getDateRange(filter: string): { gte?: Date; lte?: Date } | undefined {
+    const now = new Date();
+
+    switch (filter) {
+        case '1day': {
+            const gte = new Date(now);
+            gte.setDate(gte.getDate() - 1);
+            return { gte };
+        }
+        case 'week': {
+            const gte = new Date(now);
+            gte.setDate(gte.getDate() - 7);
+            return { gte };
+        }
+        case 'month': {
+            const gte = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lte = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+            return { gte, lte };
+        }
+        case 'prevmonth': {
+            const y = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+            const m = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+            const gte = new Date(y, m, 1);
+            const lte = new Date(y, m + 1, 0, 23, 59, 59, 999);
+            return { gte, lte };
+        }
+        case 'quarter': {
+            const q = Math.floor(now.getMonth() / 3);
+            const gte = new Date(now.getFullYear(), q * 3, 1);
+            const lte = new Date(now.getFullYear(), q * 3 + 3, 0, 23, 59, 59, 999);
+            return { gte, lte };
+        }
+        default:
+            return undefined;
+    }
+}
+
+export interface SupplierLedgerQuery {
+    startDate?: string;
+    endDate?: string;
+    page?: string;
+    limit?: string;
+}
+
 export class SupplierPaymentService {
 
     // ============ CREATE SUPPLIER PAYMENT ============
@@ -280,6 +328,116 @@ export class SupplierPaymentService {
             payments,
             totalPaid: totalAmount,
             paymentCount,
+        };
+    }
+
+
+
+    async getSupplierLedger(
+        id: string,
+        query: SupplierLedgerQuery,
+        authUser: AuthUser
+    ): Promise<any> {
+        // Business logic: Validate ID
+        if (!id?.trim()) {
+            throw new ApiError(400, 'Supplier ID is required');
+        }
+
+        // Verify supplier exists
+        const supplier = await SupplierRepository.findByIdMinimal(id);
+        if (!supplier) {
+            throw new ApiError(404, 'Supplier not found');
+        }
+
+        // ⚠️ SECURITY: Verify user owns this supplier (was missing in original)
+        if (supplier.createdById !== authUser.id) {
+            throw new ApiError(403, 'You do not have access to this supplier');
+        }
+
+        // 1. Pagination
+        const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '20', 10) || 20));
+        const skip = (page - 1) * limit;
+
+        // 2. Default date range (Indian FY: April 1 start)
+        const now = new Date();
+        const currentYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+        const defaultStartDate = new Date(currentYear, 3, 1);
+
+        const start = query.startDate ? new Date(query.startDate) : defaultStartDate;
+        const end = query.endDate ? new Date(query.endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        // 3. Balance B/F
+        const prevAggregates = await SupplierPaymentRepository.getLedgerAggregatesBefore(id, start);
+        const balanceBF =
+            Number(supplier.openingBalance) + prevAggregates.purchases - prevAggregates.payments;
+
+        // 4. Current period transactions
+        const { purchases, payments } = await SupplierPaymentRepository.getLedgerTransactionsInRange(
+            id,
+            start,
+            end
+        );
+
+        // 5. Merge + running balance
+        const allTransactions = [
+            ...purchases.map((p) => ({
+                date: p.purchaseDate,
+                type: 'PURCHASE',
+                desc: `Purchase Invoice #${p.invoiceNo || p.id}`,
+                credit: Number(p.totalAmount) || 0,
+                debit: 0,
+                id: `purchase-${p.id}`,
+            })),
+            ...payments.map((p) => ({
+                date: p.paymentDate,
+                type: p.paymentMode === 'Credit Note' ? p.paymentMode : 'PAYMENT',
+                desc: `Payment ${p.paymentMode}${p.checkNo ? ` - Chq #${p.checkNo}` : p.reference ? ` - ${p.reference}` : ''
+                    }`,
+                credit: 0,
+                debit: Number(p.amount) || 0,
+                id: `payment-${p.id}`,
+                remarks: p.remarks,
+            })),
+        ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        let runningBalance = balanceBF;
+        const fullLedger = allTransactions.map((txn) => {
+            runningBalance = runningBalance + txn.debit - txn.credit;
+            return { ...txn, runningBalance: parseFloat(runningBalance.toFixed(2)) };
+        });
+
+        // 6. Paginate merged result
+        const total = fullLedger.length;
+        const paginatedLedger = fullLedger.slice(skip, skip + limit);
+
+        // 7. Period summary
+        const totalPurchases = purchases.reduce((sum, p) => sum + (Number(p.totalAmount) || 0), 0);
+        const totalPayments = payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+        // 8. Return assembled result (controller just wraps this in ApiResponse)
+        return {
+            supplierName: supplier.name,
+            gstNumber: supplier.gstNumber,
+            balanceBF: parseFloat(balanceBF.toFixed(2)),
+            currentBalance: Number(supplier.balance),
+            ledger: paginatedLedger,
+            summary: {
+                totalPurchases: parseFloat(totalPurchases.toFixed(2)),
+                totalPayments: parseFloat(totalPayments.toFixed(2)),
+                periodChange: parseFloat((totalPurchases - totalPayments).toFixed(2)),
+            },
+            meta: {
+                page,
+                limit,
+                totalRecords: total,
+                totalPages: Math.ceil(total / limit),
+                dateRange: {
+                    start: start.toISOString().split('T')[0],
+                    end: end.toISOString().split('T')[0],
+                },
+            },
         };
     }
 

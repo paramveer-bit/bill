@@ -25,6 +25,9 @@ router.post('/', supplierPaymentController.createSupplierPayment);//checked and 
 // Query params: ?supplierId=, ?paymentMode=, ?search=, ?startDate=, ?endDate=, ?page=1, ?limit=30, ?sortBy=, ?sortOrder=
 router.get('/', supplierPaymentController.getSupplierPayments);//checked and implemented
 
+// ----------------------------------------------------------------------------------------------
+router.get('/:id/ledger', supplierPaymentController.getSupplierLedger);
+
 // GET /api/v1/supplier-payments/summary/daily - Get daily payment summary
 // Query params: ?days=30
 // new

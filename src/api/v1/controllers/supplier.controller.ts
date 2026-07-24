@@ -144,7 +144,8 @@ const addSupplierPayment = asyncHandler(async (req: Request, res: Response) => {
         const payment = await tx.supplierPayment.create({
             data: {
                 supplierId,
-                amount: new Decimal(amount),
+                createdById:
+                    amount: new Decimal(amount),
                 paymentDate: new Date(paymentDate),
                 paymentMode,
                 checkNo: checkNo || null,
@@ -461,6 +462,7 @@ const deleteSupplierPayment = asyncHandler(async (req: Request, res: Response) =
     });
     res.status(200).json(new ApiResponse("Supplier payment deleted successfully", null));
 });
+
 const getSupplierLedger = asyncHandler(async (req: Request, res: Response) => {
     const { id: supplierId } = req.params;
     let { startDate, endDate, page: pageStr, limit: limitStr } = req.query;

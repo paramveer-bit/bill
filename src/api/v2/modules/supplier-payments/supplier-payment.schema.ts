@@ -137,3 +137,26 @@ export type SupplierPaymentStats = {
     period: string;
     byPaymentMode: Record<string, decimal>;
 };
+
+export type LedgerAggregates = {
+    purchases: number;
+    payments: number;
+};
+
+export type LedgerRawTransactions = {
+    purchases: {
+        id: string;
+        invoiceNo: string | null;
+        totalAmount: any; // Prisma Decimal
+        purchaseDate: Date;
+    }[];
+    payments: {
+        id: string;
+        amount: any; // Prisma Decimal
+        paymentMode: string;
+        paymentDate: Date;
+        checkNo: string | null;
+        reference: string | null;
+        remarks: string | null;
+    }[];
+};
