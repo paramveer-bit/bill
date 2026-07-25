@@ -11,6 +11,14 @@ import PrismaClient from '@/prismaClient/index.js';
 import type { AuthUser } from '../auth.schema';
 import { validPaymentModes } from '../constants.js';
 import { CustomerRepository } from '../customers/customer.repository.js';
+
+
+export interface CustomerLedgerQuery {
+    startDate?: string;
+    endDate?: string;
+    page?: string;
+    limit?: string;
+}
 /**
  * Service layer - Contains all business logic
  * Calls repository for data access
@@ -206,6 +214,98 @@ export class ReceiptService {
                 totalReceived,
                 totalReceipts: receiptCount,
             }
+        };
+    }
+
+
+    // ============ GET CUSTOMER LEDGER ============
+    async getCustomerLedger(
+        id: string,
+        query: CustomerLedgerQuery,
+        authUser: AuthUser
+    ): Promise<any> {
+        if (!id?.trim()) {
+            throw new ApiError(400, 'Customer ID is required');
+        }
+
+        const customer = await CustomerRepository.findById(id, authUser.id);
+        if (!customer) {
+            throw new ApiError(404, 'Customer not found');
+        }
+
+
+
+        // 1. Pagination
+        const page = Math.max(1, parseInt(query.page ?? '1', 10) || 1);
+        const limit = Math.min(100, Math.max(1, parseInt(query.limit ?? '20', 10) || 20));
+        const skip = (page - 1) * limit;
+
+        // 2. Default date range (Indian FY: April 1 start)
+        const now = new Date();
+        const currentYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+        const defaultStartDate = new Date(currentYear, 3, 1);
+
+        const start = query.startDate ? new Date(query.startDate) : defaultStartDate;
+        const end = query.endDate ? new Date(query.endDate) : new Date();
+        end.setHours(23, 59, 59, 999);
+
+        // 3. Balance B/F
+        const prevAggregates = await ReceiptRepository.getLedgerAggregatesBefore(id, start);
+        const balanceBF =
+            Number(customer.openingBalance) + prevAggregates.sales - prevAggregates.receipts;
+
+        // 4. Current period transactions
+        const { sales, receipts } = await ReceiptRepository.getLedgerTransactionsInRange(
+            id,
+            start,
+            end
+        );
+
+        // 5. Merge + running balance
+        // Sale = debit (customer owes more), Receipt = credit (customer owes less)
+        const ledgerEntries = [
+            ...sales.map((s) => ({
+                date: s.saleDate,
+                type: 'SALE',
+                desc: `Inv #${s.invoiceNo}`,
+                debit: Number(s.totalAmount),
+                credit: 0,
+            })),
+            ...receipts.map((r) => ({
+                remarks: r.remarks,
+                date: r.receiptDate,
+                type: r.paymentMode === 'Discount' ? r.paymentMode : 'RECEIPT',
+                desc: r.paymentMode,
+                debit: 0,
+                credit: Number(r.amount),
+            })),
+        ].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+        let runningBal = balanceBF;
+        const fullLedger = ledgerEntries.map((e) => {
+            runningBal = runningBal + e.debit - e.credit;
+            return { ...e, runningBalance: parseFloat(runningBal.toFixed(2)) };
+        });
+
+        // 6. Paginate merged result
+        const total = fullLedger.length;
+        const paginatedLedger = fullLedger.slice(skip, skip + limit);
+
+        return {
+            customerName: customer.name,
+            balanceBF: parseFloat(balanceBF.toFixed(2)),
+            currentBalance: Number(customer.balance),
+            ledger: paginatedLedger,
+            meta: {
+                page,
+                limit,
+                totalRecords: total,
+                totalPages: Math.ceil(total / limit),
+                dateRange: {
+                    start: start.toISOString().split('T')[0],
+                    end: end.toISOString().split('T')[0],
+                },
+            },
         };
     }
 

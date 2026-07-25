@@ -10,8 +10,10 @@ import {
     createReceiptSchema,
     listReceiptsSchema,
 } from './receipt.schema.js';
+import { CustomerService } from '../customers/customer.service.js';
 
 const receiptService = new ReceiptService();
+const customerService = new CustomerService();
 
 /**
  * Controller layer - ONLY handles HTTP request/response
@@ -140,6 +142,33 @@ export const getCustomerReceipts = asyncHandler(async (req: Request, res: Respon
             receipts: result.receipts.map(formatReceiptResponse),
             totalReceived: result.totalReceived,
         })
+    );
+});
+
+
+
+
+export const getCustomerLedger = asyncHandler(async (req: Request, res: Response) => {
+    const authUser = getAuthUser(req);
+    const { id } = req.params;
+
+    if (!id) {
+        throw new ApiError(400, 'Customer ID is required');
+    }
+
+    const ledger = await receiptService.getCustomerLedger(
+        id,
+        {
+            startDate: req.query.startDate as string,
+            endDate: req.query.endDate as string,
+            page: req.query.page as string,
+            limit: req.query.limit as string,
+        },
+        authUser
+    );
+
+    res.status(200).json(
+        new ApiResponse('Customer ledger retrieved successfully', ledger)
     );
 });
 

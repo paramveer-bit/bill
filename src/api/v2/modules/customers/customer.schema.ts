@@ -13,7 +13,12 @@ const customerSchema = z.object({
         .transform((val) => new Decimal(val))
         .refine((val) => val.gte(0), "Sell price cannot be negative")
         .nullable(),  // Use Decimal type
-    createdAt: z.date()
+    createdAt: z.date(),
+    balance: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
+        .refine((val) => val.gte(0), "Balance cannot be negative")
+        .nullable(),  // Use Decimal type
+    createdById: z.string().nullable(),
 });
 export type Customer = z.infer<typeof customerSchema>;
 

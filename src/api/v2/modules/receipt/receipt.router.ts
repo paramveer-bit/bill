@@ -25,6 +25,8 @@ router.post('/', receiptController.createReceipt); //checked and implemented
 // Query params: ?search=, ?customerId=, ?dateFilter=, ?startDate=, ?endDate=, ?page=1, ?limit=30, ?sortBy=, ?sortOrder=
 router.get('/', receiptController.getReceipts);//checked and implemented
 
+router.get('/:id/ledger', receiptController.getCustomerLedger);
+
 // GET /api/v1/receipts/stats - Get receipt statistics
 // router.get('/stats', receiptController.getReceiptStats);
 

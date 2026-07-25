@@ -230,4 +230,46 @@ export class ReceiptRepository {
             receiptCount: result._count || 0,
         };
     }
+
+    // ============ LEDGER: AGGREGATES BEFORE A DATE (Balance B/F) ============
+    static async getLedgerAggregatesBefore(
+        customerId: string,
+        before: Date
+    ): Promise<{ sales: number; receipts: number }> {
+        const [prevSales, prevReceipts] = await Promise.all([
+            PrismaClient.sale.aggregate({
+                _sum: { totalAmount: true },
+                where: { customerId, saleDate: { lt: before } },
+            }),
+            PrismaClient.receipt.aggregate({
+                _sum: { amount: true },
+                where: { customerId, receiptDate: { lt: before } },
+            }),
+        ]);
+
+        return {
+            sales: Number(prevSales._sum.totalAmount) || 0,
+            receipts: Number(prevReceipts._sum.amount) || 0,
+        };
+    }
+
+    // ============ LEDGER: TRANSACTIONS IN DATE RANGE ============
+    static async getLedgerTransactionsInRange(
+        customerId: string,
+        start: Date,
+        end: Date
+    ) {
+        const [sales, receipts] = await Promise.all([
+            PrismaClient.sale.findMany({
+                where: { customerId, saleDate: { gte: start, lte: end } },
+                orderBy: { saleDate: 'asc' },
+            }),
+            PrismaClient.receipt.findMany({
+                where: { customerId, receiptDate: { gte: start, lte: end } },
+                orderBy: { receiptDate: 'asc' },
+            }),
+        ]);
+
+        return { sales, receipts };
+    }
 }
