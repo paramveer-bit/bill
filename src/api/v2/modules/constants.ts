@@ -1,1 +1,1 @@
-export const validPaymentModes = ['Cash', 'Cheque', 'Online', 'Bank Transfer', 'UPI', 'Other'];
+export const validPaymentModes = ['Cash', 'Cheque', 'Online', 'Insentive', 'Bank Transfer', 'UPI', 'Other'];
