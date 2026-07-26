@@ -137,7 +137,7 @@ export class SaleService {
             });
         }
 
-        const totalAmount = linePlans.reduce((s, l) => s + l.lineTotal.toNumber(), 0);
+        const totalAmount = linePlans.reduce((s, l) => s + l.lineTotal.toNumber(), 0) + data.coinAdjustment.toNumber();
 
         // ── Delegate to repository ───────────────────────────────────────────────
         return SaleRepository.create({
@@ -145,6 +145,7 @@ export class SaleService {
             saleDate,
             totalAmount,
             linePlans,
+            coinAdjustment: data.coinAdjustment,
             customer: {
                 name: customer.name,
                 gstNumber: customer.gstNumber ?? null,

@@ -69,6 +69,7 @@ export class SaleRepository {
         saleDate: Date;
         totalAmount: number;
         linePlans: LinePlan[];
+        coinAdjustment: Decimal;
         customer: {
             name: string;
             gstNumber: string | null;
@@ -95,6 +96,7 @@ export class SaleRepository {
                     customerGST: customer.gstNumber ?? null,
                     customerPhone: customer.phone ?? null,
                     customerAddress: customer.address ?? null,
+                    coinAdjustment: params.coinAdjustment,
                     lines: {
                         create: linePlans.map((lp) => ({
                             productId: lp.productId,

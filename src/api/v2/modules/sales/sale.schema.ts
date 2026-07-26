@@ -25,6 +25,8 @@ export const createSaleSchema = z.object({
         .transform((val) => new Date(val)),
 
     lines: z.array(saleLineSchema).min(1, 'At least one line item is required'),
+    coinAdjustment: z.union([z.string(), z.number()])
+        .transform((val) => new Decimal(val))
 });
 
 // ============ LIST / FILTER SCHEMA ============

@@ -248,6 +248,7 @@ model Sale {
   customerPhone   String?
   customerAddress String?
   saleDate        DateTime
+  coinAdjustment  Decimal   @default(0.00) @db.Decimal(12, 2)
   totalAmount     Decimal   @db.Decimal(12, 2)
   createdAt       DateTime  @default(now())
   createdBy       user      @relation(fields: [createdById], references: [id])
