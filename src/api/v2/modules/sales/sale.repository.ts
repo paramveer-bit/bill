@@ -97,31 +97,34 @@ export class SaleRepository {
                     customerPhone: customer.phone ?? null,
                     customerAddress: customer.address ?? null,
                     coinAdjustment: params.coinAdjustment,
-                    lines: {
-                        create: linePlans.map((lp) => ({
-                            productId: lp.productId,
-                            productName: lp.productName,
-                            qty: lp.qty,
-                            unitQty: lp.unitQty,
-                            unitname: lp.unitName,
-                            unitSellPrice: lp.unitSellPrice,
-                            taxRate: null,
-                            lineTotal: lp.lineTotal,
-                            costAllocated: lp.costAllocated,
-                            allocations: {
-                                create: lp.allocations.map((a) => ({
-                                    purchaseBatchId: a.purchaseBatchId,
-                                    qtyAllocated: a.qtyAllocated,
-                                    unitCost: a.unitCost,
-                                })),
-                            },
-                        })),
-                    },
-                },
-                include: {
-                    lines: { include: { allocations: true } },
                 },
             });
+
+            // 2. Create SaleLines and their Allocations sequentially using the newSale.id
+            for (const lp of linePlans) {
+                await tx.saleLine.create({
+                    data: {
+                        saleId: newSale.id, // Explicitly linking the verified parent ID
+                        productId: lp.productId,
+                        productName: lp.productName,
+                        qty: lp.qty,
+                        unitQty: lp.unitQty,
+                        unitname: lp.unitName,
+                        unitSellPrice: lp.unitSellPrice,
+                        taxRate: null,
+                        lineTotal: lp.lineTotal,
+                        costAllocated: lp.costAllocated,
+                        // One level of nesting (SaleLine -> Allocations) is safe
+                        allocations: {
+                            create: lp.allocations.map((a) => ({
+                                purchaseBatchId: a.purchaseBatchId,
+                                qtyAllocated: a.qtyAllocated,
+                                unitCost: a.unitCost,
+                            })),
+                        },
+                    },
+                });
+            }
 
             // 2. Decrement batch stock (FIFO)
             for (const lp of linePlans) {
@@ -139,7 +142,12 @@ export class SaleRepository {
                 data: { balance: { increment: totalAmount } },
             });
 
-            return newSale;
+            return await tx.sale.findUnique({
+                where: { id: newSale.id },
+                include: {
+                    lines: { include: { allocations: true } },
+                },
+            });;
         });
     }
 
