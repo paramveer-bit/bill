@@ -229,8 +229,8 @@ export class ProductRepository {
     }
 
     // ============ FIND BY CATEGORY ============
-    static async findByCategory(categoryId: string, userId: string): Promise<ProductWithRelations[]> {
-        return PrismaClient.product.findMany({
+    static async findByCategory(categoryId: string, userId: string): Promise<(ProductWithRelations & { currentStock: number; stockUnit: string })[]> {
+        const products = await PrismaClient.product.findMany({
             where: {
                 categoryId,
                 createdById: userId, // ← Only user's products
@@ -238,6 +238,32 @@ export class ProductRepository {
             include: productInclude,
             orderBy: { name: 'asc' },
         });
+
+        if (products.length === 0) return [];
+
+        const productIds = products.map((p) => p.id);
+
+        // Sum remaining stock (in base units) across all batches, per product
+        const stockAggregates = await PrismaClient.purchaseBatch.groupBy({
+            by: ['productId'],
+            where: {
+                productId: { in: productIds },
+            },
+            _sum: {
+                qtyRemaining: true,
+            },
+        });
+
+        const stockMap = new Map(
+            stockAggregates.map((s) => [s.productId, s._sum.qtyRemaining ?? 0])
+        );
+
+        return products.map((product) => ({
+            ...product,
+            currentStock: stockMap.get(product.id) ?? 0,
+            stockUnit: product.baseUnit, // e.g. "pcs"
+        }));
+
     }
 
     // ============ FIND BY CATEGORY AND SUBCATEGORIES ============ used
